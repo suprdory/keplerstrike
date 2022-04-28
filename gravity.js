@@ -1,6 +1,9 @@
 const canvas = document.getElementById("cw");
 const ctx = canvas.getContext("2d");
-
+const cursor = {
+    x: innerWidth / 2,
+    y: innerHeight / 2,
+};
 function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
     //variables to be used when creating the arrow
     var headlen = 10;
@@ -38,92 +41,95 @@ function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
     ctx.stroke();
     ctx.restore();
 }
-
 class Body {
     constructor(
-        x = 40,
-        y = 40,
-        r = 20,
-        u = 0,
-        v = 0,
-        color = "#FF0000") {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.u = u;
-        this.v = v;
-        this.ud = 0;
-        this.vd = 0;
-        this.fillColor = color;
-        this.calc_accel()
-    }
-    move() {
-        this.x = this.x + dt * this.u;
-        this.y = this.y + dt * this.v;
-    }
-    accel() {
-        this.u = this.u + dt * this.ud;
-        this.v = this.v + dt * this.vd;
-    }
-    calc_accel() {
-        let ax = 0;
-        let ay = 0;
-        let r2= 0;
-        let atan2=0;
-        planetArray.forEach((p) => {
-            r2 = (this.x - p.x) ** 2 + (this.y - p.y) ** 2;
-            atan2 = Math.atan2(this.y - p.y, this.x - p.x);
-            ax = ax + -G * p.m / r2  * Math.cos(atan2);
-            ay = ay + -G * p.m / r2 * Math.sin(atan2);
-        })
-        this.ud = ax;
-        this.vd = ay;
-    }
-    draw() {
-        ctx.beginPath();
-        ctx.fillStyle = this.fillColor;
-        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
-        ctx.fill();
-        drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl *this.v, 1, "green")
-        drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl *this.vd, 1, "red")
-    }
-}
-
-class Planet {
-    constructor(
-        x = Math.random() * innerWidth,
-        y = Math.random() * innerHeight,
-        r = Math.random() * 200,
-        m = Math.random(),
-        color = 0) {
+        x = Math.random()*canvas.width, 
+        y = Math.random() * canvas.height * 0.85,
+        r = 5+ Math.random() *50, 
+        m = Math.random(), 
+        color = generateHSLColor()) {
         this.x = x;
         this.y = y;
         this.r = r;
         this.m = m;
-        this.fillColor = color;
+        this.color = color;
     }
+
     draw() {
         ctx.beginPath();
-        ctx.fillStyle = this.fillColor;
+        ctx.fillStyle = this.color;
         ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
         ctx.fill();
     }
-    setColor(newColor) {
-        this.fillColor = newColor
+}
+class Base extends Body {
+    constructor(n, x, y, r, color, th, sp) {
+        super(x, y, r, 0, color);
+        this.n = n;
+        this.th = th;
+        this.sp = sp;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.strokeStyle = this.color;
+        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // ctx.moveTo(this.x,this.y)
+        drawArrow(ctx, this.x, this.y, this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), 1, this.fillColor);
+    }
+    launch(){
+        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th),projSize,1,projCol))
     }
 }
+class Projectile extends Body {
+    constructor(x = 40, y = 40, u = 0, v = 10, r = 20, m = 0, color = "#FF0000") {
+        super(x, y, r, m, color);
+        this.u = u;
+        this.v = v;
+        this.ud = 0;
+        this.vd = 0;
+        this.setAccel();
+    }
+    setAccel(){
+        this.ud = 0;
+        this.vd = 0;
+        let r2 = 0;
+        let atan2 = 0;
+        planetArray.forEach((p) => {
+            r2 = (this.x - p.x) ** 2 + (this.y - p.y) ** 2;
+            atan2 = Math.atan2(this.y - p.y, this.x - p.x);
+            this.ud = this.ud + p.m / r2 * Math.cos(atan2);
+            this.vd = this.vd + p.m / r2 * Math.sin(atan2);
+        })
+        this.ud = -G * this.ud;
+        this.vd = -G * this.vd;
+    }
 
+    update() {
+        this.setAccel()
+
+        this.u = this.u + dt * this.ud;
+        this.v = this.v + dt * this.vd;
+
+        this.x = this.x + dt * this.u;
+        this.y = this.y + dt * this.v;
+    }
+    draw() {
+        super.draw()
+        drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
+        drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
+    }
+}
 function generatePlanets(n) {
     for (let i = 0; i < n; i++) {
-        planetArray[i] = new Planet();
+        planetArray[i] = new Body();
     }
 }
-
-function generateHSLColor(hueWidth, hueStart, valueWidth, valueStart) {
+function generateHSLColor(hueWidth = Math.random() * 255, hueStart = Math.random()*255, valueWidth=20, valueStart=50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
     return colorString;
 }
-
 function setColors() {
     let hueWidth = Math.random() ** 2 * 360
     let hueStart = Math.random() * 360
@@ -136,38 +142,80 @@ function setSize() {
     canvas.height = innerHeight;
     canvas.width = innerWidth;
 }
-
 function anim() {
     requestAnimationFrame(anim);
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     planetArray.forEach((planet) => planet.draw())
-
-    bodyArray.forEach((body) => {
-        body.calc_accel()
-        body.accel()
-        body.move()
-        body.draw()
+    projArray.forEach((proj) => {
+        proj.update()
+        // proj.draw()
     })
+    redraw()
+}
+mouseDown=false;
+addEventListener('mousedown', e => {
+    cursor.x = e.offsetX;
+    cursor.y = e.offsetY;
+    mouseDown = true;
+    lastTouch = new Date().getTime();
+    th0=baseArray[0].th;
+    sp0=baseArray[0].sp;
+});
+addEventListener('mousemove', e => {
+    if (mouseDown){
+        dth=(e.offsetX-cursor.x)*0.01
+        baseArray[0].th=th0+dth;
+        dsp = (e.offsetY - cursor.y) *-0.5
+        baseArray[0].sp = sp0 + dsp;
+        redraw()
+        baseArray[0].draw();
+
+    }
+
+});
+addEventListener('mouseup', e => {
+    mouseDown = false;
+});
+addEventListener('dblclick',e => {
+    baseArray[0].launch()
+});
+
+function redraw(){
+    ctx.fillStyle = bgFillStyle;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    planetArray.forEach((x) => x.draw())
+    projArray.forEach((x) => x.draw())
+    baseArray.forEach((x) => x.draw())
 }
 
-const vscl = 2
-const ascl = 20
+const vscl = 2 // velocity vector scale
+const ascl = 5 // acceleration vector scale
+const projCol='blue'
+const projSize=5
 
 const G = 100000
 const dt = 0.1
-let bgFillStyle = "rgba(0,0,0,.002)"
+
+let bgFadeStyle = "rgba(0,0,0,.002)"
+let bgFillStyle = "rgba(0,0,0,1)"
+
 setSize()
+
 let planetArray = [];
-planetArray.push(new Planet(canvas.width/2, canvas.height/2, 40, 1.0, "#55AA55"))
-planetArray.push(new Planet(canvas.width/2-20, canvas.height / 2-30, 30, 1.0, "#5555AA"))
-// planetArray.push(new Planet(240, 550, 30, .5, "#AA5555"))
+// planetArray.push(new Body(canvas.width / 2, canvas.height / 2, 40, 1.0, "#55AA55"))
+// planetArray.push(new Body(canvas.width / 2 - 20, canvas.height / 2 - 30, 30, 1.0, "#5555AA"))
+generatePlanets(10)
 
-let bodyArray = []
-bodyArray.push(new Body(canvas.width / 2-220, canvas.height / 2, 5, 0, 20, 'blue'));
+let projArray = [];
+// projArray.push(new Projectile(canvas.width / 2 - 220, canvas.height / 2, 0, 20, 5, 1, 'blue'));
 
-planetArray.forEach((planet) => planet.draw())
-// bodyArray.forEach((body) => body.draw())
+let baseArray = [];
+baseArray.push(new Base(1, canvas.width *0.5, canvas.height * 0.9, 20, "#FFBBBB", 0, 20,))
+
+
+
+redraw()
 
 anim()
