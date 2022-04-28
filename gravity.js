@@ -43,10 +43,10 @@ function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
 }
 class Body {
     constructor(
-        x = Math.random()*canvas.width, 
-        y = Math.random() * canvas.height * 0.85,
-        r = 5+ Math.random() *50, 
-        m = Math.random(), 
+        x = Math.random() * canvas.width,
+        y = .15 * canvas.height + Math.random() * canvas.height * 0.6,
+        r = 5 + Math.random() * 50,
+        m = Math.random(),
         color = generateHSLColor()) {
         this.x = x;
         this.y = y;
@@ -78,8 +78,8 @@ class Base extends Body {
         // ctx.moveTo(this.x,this.y)
         drawArrow(ctx, this.x, this.y, this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), 1, this.fillColor);
     }
-    launch(){
-        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th),projSize,1,projCol))
+    launch() {
+        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol))
     }
 }
 class Projectile extends Body {
@@ -91,7 +91,7 @@ class Projectile extends Body {
         this.vd = 0;
         this.setAccel();
     }
-    setAccel(){
+    setAccel() {
         this.ud = 0;
         this.vd = 0;
         let r2 = 0;
@@ -126,7 +126,7 @@ function generatePlanets(n) {
         planetArray[i] = new Body();
     }
 }
-function generateHSLColor(hueWidth = Math.random() * 255, hueStart = Math.random()*255, valueWidth=20, valueStart=50) {
+function generateHSLColor(hueWidth = Math.random() * 255, hueStart = Math.random() * 255, valueWidth = 20, valueStart = 50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
     return colorString;
 }
@@ -154,35 +154,74 @@ function anim() {
     })
     redraw()
 }
-mouseDown=false;
+mouseDown = false;
+let lastTouch = new Date().getTime();
 addEventListener('mousedown', e => {
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
     mouseDown = true;
     lastTouch = new Date().getTime();
-    th0=baseArray[0].th;
-    sp0=baseArray[0].sp;
+    th0 = baseArray[0].th;
+    sp0 = baseArray[0].sp;
 });
-addEventListener('mousemove', e => {
-    if (mouseDown){
-        dth=(e.offsetX-cursor.x)*0.01
-        baseArray[0].th=th0+dth;
-        dsp = (e.offsetY - cursor.y) *-0.5
-        baseArray[0].sp = sp0 + dsp;
-        redraw()
-        baseArray[0].draw();
+addEventListener("touchstart", e => {
+    e.preventDefault();
+    let now = new Date().getTime();
+    let timeSince = now - lastTouch;
+
+    if (timeSince < 300) {
+        //double touch
+        doubleClick();
 
     }
+    lastTouch = new Date().getTime()
+    cursor.x = e.touches[0].clientX;
+    cursor.y = e.touches[0].clientY;
+    mouseDown = true;
+    th0 = baseArray[0].th;
+    sp0 = baseArray[0].sp;
+},
+    { passive: false }
+);
 
+addEventListener('mousemove', e => {
+    if (mouseDown) {
+        dth = (e.offsetX - cursor.x) * 0.01
+        baseArray[0].th = th0 + dth;
+        dsp = (e.offsetY - cursor.y) * -0.5
+        baseArray[0].sp = sp0 + dsp;
+        redraw()
+    }
 });
+addEventListener("touchmove", e => {
+    e.preventDefault();
+    dth = (e.touches[0].clientX - cursor.x) * 0.01
+    baseArray[0].th = th0 + dth;
+    dsp = (e.touches[0].clientY - cursor.y) * -0.5
+    baseArray[0].sp = sp0 + dsp;
+    redraw()
+},
+    { passive: false }
+);
+
 addEventListener('mouseup', e => {
     mouseDown = false;
 });
-addEventListener('dblclick',e => {
-    baseArray[0].launch()
+addEventListener("touchend", e => {
+    e.preventDefault();
+    mouseDown = false;
+},
+    { passive: false }
+);
+addEventListener('dblclick', e => {
+    doubleClick();
 });
 
-function redraw(){
+function doubleClick() {
+    baseArray[0].launch()
+}
+
+function redraw() {
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     planetArray.forEach((x) => x.draw())
@@ -192,8 +231,8 @@ function redraw(){
 
 const vscl = 2 // velocity vector scale
 const ascl = 5 // acceleration vector scale
-const projCol='blue'
-const projSize=5
+const projCol = 'blue'
+const projSize = 5
 
 const G = 100000
 const dt = 0.1
@@ -206,16 +245,17 @@ setSize()
 let planetArray = [];
 // planetArray.push(new Body(canvas.width / 2, canvas.height / 2, 40, 1.0, "#55AA55"))
 // planetArray.push(new Body(canvas.width / 2 - 20, canvas.height / 2 - 30, 30, 1.0, "#5555AA"))
-generatePlanets(10)
+generatePlanets(5)
 
 let projArray = [];
 // projArray.push(new Projectile(canvas.width / 2 - 220, canvas.height / 2, 0, 20, 5, 1, 'blue'));
 
 let baseArray = [];
-baseArray.push(new Base(1, canvas.width *0.5, canvas.height * 0.9, 20, "#FFBBBB", 0, 20,))
+baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.9, 20, "#FFBBBB", 3 * Math.PI / 2, 20,))
+baseArray.push(new Base(2, canvas.width * 0.5, canvas.height * 0.1, 20, "#BBBBFF", 1 * Math.PI / 2, 20,))
 
 
 
-redraw()
+// redraw()
 
 anim()
