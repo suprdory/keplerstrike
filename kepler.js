@@ -54,7 +54,7 @@ class Body {
         this.m = m;
         this.color = color;
     }
-
+cd
     draw() {
         ctx.beginPath();
         ctx.fillStyle = this.color;
