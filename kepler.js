@@ -44,7 +44,7 @@ function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
 class Body {
     constructor(
         x = Math.random() * canvas.width,
-        y = .15 * canvas.height + Math.random() * canvas.height * 0.6,
+        y = .2 * canvas.height + Math.random() * canvas.height * 0.6,
         r = 5 + Math.random() * 50,
         m = Math.random(),
         color = generateHSLColor()) {
@@ -54,7 +54,7 @@ class Body {
         this.m = m;
         this.color = color;
     }
-cd
+    cd
     draw() {
         ctx.beginPath();
         ctx.fillStyle = this.color;
@@ -69,6 +69,8 @@ class Base extends Body {
         this.n = n;
         this.th = th;
         this.sp = sp;
+        this.isBase = true;
+        this.nhits = 0;
     }
     draw() {
         ctx.beginPath();
@@ -80,12 +82,14 @@ class Base extends Body {
         drawArrow(ctx, this.x, this.y, this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), 1, this.fillColor);
     }
     launch() {
-        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol))
+        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
     }
 }
 class Projectile extends Body {
-    constructor(x = 40, y = 40, u = 0, v = 10, r = 20, m = 0, color = "#FF0000") {
+    constructor(x = 40, y = 40, u = 0, v = 10, r = 20, m = 0, color = "#FF0000", base = 0) {
         super(x, y, r, m, color);
+        this.live = true;
+        this.base = base;
         this.u = u;
         this.v = v;
         this.ud = 0;
@@ -108,26 +112,46 @@ class Projectile extends Body {
     }
 
     update() {
-        this.setAccel()
+        if (this.live) {
+            this.setAccel()
 
-        this.u = this.u + dt * this.ud;
-        this.v = this.v + dt * this.vd;
+            this.u = this.u + dt * this.ud;
+            this.v = this.v + dt * this.vd;
 
-        this.x = this.x + dt * this.u;
-        this.y = this.y + dt * this.v;
+            this.x = this.x + dt * this.u;
+            this.y = this.y + dt * this.v;
+        }
     }
     draw() {
         super.draw()
-        drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
-        drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
+        if (this.live) {
+            drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
+            drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
+        }
+    }
+    detectCollision(bodyArray) {
+        bodyArray.forEach(b => {
+            if (this.live) {
+                if (this.base != b.n) {
+                    if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
+                        console.log("Boom!");
+                        this.live = false;
+                        if (b.isBase) {
+                            b.nhits = b.nhits + 1
+                        }
+                    }
+                }
+            }
+        })
     }
 }
+
 function generatePlanets(n) {
     for (let i = 0; i < n; i++) {
         planetArray[i] = new Body();
     }
 }
-function generateHSLColor(hueWidth = Math.random() * 255, hueStart = Math.random() * 255, valueWidth = 20, valueStart = 50) {
+function generateHSLColor(hueWidth = Math.random() * 30, hueStart = 160, valueWidth = 20, valueStart = 50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
     return colorString;
 }
@@ -143,68 +167,63 @@ function setSize() {
     canvas.height = innerHeight;
     canvas.width = innerWidth;
 }
-function anim() {
-    requestAnimationFrame(anim);
-    ctx.fillStyle = bgFillStyle;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    planetArray.forEach((planet) => planet.draw())
-    projArray.forEach((proj) => {
-        proj.update()
-        // proj.draw()
-    })
-    redraw()
-}
-mouseDown = false;
-let lastTouch = new Date().getTime();
 addEventListener('mousedown', e => {
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
     mouseDown = true;
     lastTouch = new Date().getTime();
-    th0 = baseArray[0].th;
-    sp0 = baseArray[0].sp;
+
+    if (e.offsetY > canvas.height / 2) {
+        basex = 0;
+    }
+    else {
+        basex = 1;
+    }
+    th0 = baseArray[basex].th;
+    sp0 = baseArray[basex].sp;
 });
 addEventListener("touchstart", e => {
     e.preventDefault();
     let now = new Date().getTime();
     let timeSince = now - lastTouch;
-
     if (timeSince < 300) {
         //double touch
-        doubleClick();
-
+        doubleClick(basex);
     }
     lastTouch = new Date().getTime()
     cursor.x = e.touches[0].clientX;
     cursor.y = e.touches[0].clientY;
+    if (cursor.y > canvas.height / 2) {
+        basex = 0;
+    }
+    else {
+        basex = 1;
+    }
     mouseDown = true;
-    th0 = baseArray[0].th;
-    sp0 = baseArray[0].sp;
+    th0 = baseArray[basex].th;
+    sp0 = baseArray[basex].sp;
 },
     { passive: false }
 );
-
 addEventListener('mousemove', e => {
     if (mouseDown) {
         dth = (e.offsetX - cursor.x) * 0.01
-        baseArray[0].th = th0 + dth;
+        baseArray[basex].th = th0 + dth;
         dsp = (e.offsetY - cursor.y) * -0.5
-        baseArray[0].sp = sp0 + dsp;
+        baseArray[basex].sp = sp0 + dsp;
         redraw()
     }
 });
 addEventListener("touchmove", e => {
     e.preventDefault();
     dth = (e.touches[0].clientX - cursor.x) * 0.01
-    baseArray[0].th = th0 + dth;
+    baseArray[basex].th = th0 + dth;
     dsp = (e.touches[0].clientY - cursor.y) * -0.5
-    baseArray[0].sp = sp0 + dsp;
+    baseArray[basex].sp = sp0 + dsp;
     redraw()
 },
     { passive: false }
 );
-
 addEventListener('mouseup', e => {
     mouseDown = false;
 });
@@ -215,11 +234,11 @@ addEventListener("touchend", e => {
     { passive: false }
 );
 addEventListener('dblclick', e => {
-    doubleClick();
+    doubleClick(basex);
 });
-
-function doubleClick() {
-    baseArray[0].launch()
+function doubleClick(basex) {
+    // console.log(basex)
+    baseArray[basex].launch()
 }
 
 function redraw() {
@@ -229,11 +248,40 @@ function redraw() {
     projArray.forEach((x) => x.draw())
     baseArray.forEach((x) => x.draw())
 }
+function anim() {
+    requestAnimationFrame(anim);
+    ctx.fillStyle = bgFillStyle;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    planetArray.forEach((planet) => planet.draw())
+    projArray.forEach((proj) => {
+        proj.update()
+        proj.detectCollision(planetArray)
+        proj.detectCollision(baseArray)
+        // proj.draw()
+    })
+    redraw()
+    drawScores()
+}
+
+function drawScores() {
+    ctx.font = "30px Arial";
+    ctx.strokeStyle=baseCol[0]
+    ctx.strokeText(baseArray[1].nhits, 10, canvas.height-10);
+    ctx.strokeStyle = baseCol[1]
+    ctx.strokeText(baseArray[0].nhits, 10, 30);
+}
+
+mouseDown = false;
+let lastTouch = new Date().getTime();
+let basex;
 
 const vscl = 2 // velocity vector scale
 const ascl = 5 // acceleration vector scale
-const projCol = 'blue'
 const projSize = 5
+
+const projCol = ["#FF5555", "#5555FF"]
+const baseCol = ["#FFBBBB", "#BBBBFF"]
 
 const G = 100000
 const dt = 0.1
@@ -242,21 +290,11 @@ let bgFadeStyle = "rgba(0,0,0,.002)"
 let bgFillStyle = "rgba(0,0,0,1)"
 
 setSize()
-
-let planetArray = [];
-// planetArray.push(new Body(canvas.width / 2, canvas.height / 2, 40, 1.0, "#55AA55"))
-// planetArray.push(new Body(canvas.width / 2 - 20, canvas.height / 2 - 30, 30, 1.0, "#5555AA"))
-generatePlanets(5)
-
 let projArray = [];
-// projArray.push(new Projectile(canvas.width / 2 - 220, canvas.height / 2, 0, 20, 5, 1, 'blue'));
-
 let baseArray = [];
-baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.9, 20, "#FFBBBB", 3 * Math.PI / 2, 20,))
-baseArray.push(new Base(2, canvas.width * 0.5, canvas.height * 0.1, 20, "#BBBBFF", 1 * Math.PI / 2, 20,))
-
-
-
-// redraw()
+let planetArray = [];
+generatePlanets(5)
+baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
+baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
 anim()
