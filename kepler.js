@@ -6,7 +6,7 @@ const cursor = {
 };
 function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
     //variables to be used when creating the arrow
-    var headlen = 10*scl;
+    var headlen = 10 * scl;
     var angle = Math.atan2(toy - fromy, tox - fromx);
 
     ctx.save();
@@ -52,6 +52,7 @@ class Body {
         this.y = y;
         this.r = r;
         this.m = m;
+        this.lw = 1;
         this.color = color;
     }
     cd
@@ -59,7 +60,8 @@ class Body {
         ctx.beginPath();
         ctx.fillStyle = this.color;
         ctx.strokeStyle = this.color;
-        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r*scl, 0, 2 * Math.PI);
+        ctx.lineWidth = this.lw;
+        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
         ctx.stroke();
     }
 }
@@ -75,11 +77,12 @@ class Base extends Body {
     draw() {
         ctx.beginPath();
         ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.lw;
         ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
         ctx.stroke();
 
         // ctx.moveTo(this.x,this.y)
-        drawArrow(ctx, this.x * scl + xoff, this.y * scl+ yoff, (this.x + (this.r + this.sp) * Math.cos(this.th)) * scl + xoff, (this.y + (this.r + this.sp) * Math.sin(this.th)) * scl+yoff, scl*1, this.fillColor);
+        drawArrow(ctx, this.x * scl + xoff, this.y * scl + yoff, (this.x + (this.r + this.sp) * Math.cos(this.th)) * scl + xoff, (this.y + (this.r + this.sp) * Math.sin(this.th)) * scl + yoff, scl * 1, this.fillColor);
     }
     launch() {
         projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
@@ -89,13 +92,15 @@ class Projectile extends Body {
     constructor(x = 40, y = 40, u = 0, v = 10, r = 20, m = 0, color = "#FF0000", base = 0) {
         super(x, y, r, m, color);
         this.live = true;
+        this.visible = true;
         this.base = base;
         this.u = u;
         this.v = v;
+        this.lw = 3;
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
-        this.t=0
+        this.t = 0
     }
     setAccel() {
         this.ud = 0;
@@ -121,12 +126,15 @@ class Projectile extends Body {
 
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
-            this.t=this.t+1;
-            if (this.t>maxAge) {this.live=false;}
+            this.t = this.t + 1;
+            if (this.t > maxAge) {
+                this.live = false;
+                this.visible = false;
+            }
         }
     }
     draw() {
-        super.draw()
+        if (this.visible) super.draw();
         // if (this.live) {
         //     drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
         //     drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
@@ -141,6 +149,10 @@ class Projectile extends Body {
                         this.live = false;
                         if (b.isBase) {
                             b.nhits = b.nhits + 1
+                            explosionArray.push(new Explosion(this.x, this.y, 500))
+                        }
+                        else {
+                            explosionArray.push(new Explosion(this.x, this.y, 50))
                         }
                     }
                 }
@@ -168,7 +180,7 @@ function setColors() {
 }
 function setSize() {
     X = innerWidth;
-    Y= innerHeight;
+    Y = innerHeight;
     canvas.height = Y;
     canvas.width = X;
 
@@ -252,6 +264,8 @@ function redraw() {
     planetArray.forEach((x) => x.draw())
     projArray.forEach((x) => x.draw())
     baseArray.forEach((x) => x.draw())
+    explosionArray.forEach((x) => x.draw())
+
 }
 function anim() {
     requestAnimationFrame(anim);
@@ -259,12 +273,16 @@ function anim() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     planetArray.forEach((planet) => planet.draw())
+    explosionArray.forEach((e) => {
+        e.update()
+    })
     projArray.forEach((proj) => {
         proj.update()
         proj.detectCollision(planetArray)
         proj.detectCollision(baseArray)
         // proj.draw()
     })
+
     calcScl()
     redraw()
     drawScores()
@@ -278,28 +296,87 @@ function drawScores() {
     ctx.strokeText(baseArray[0].nhits, 10, 50);
 }
 
-let X,Y=0;
+let X, Y = 0;
 let xoff, yoff = 0;
 let scl = 1;
 function calcScl() {
-    let maxx = X/2;
-    let maxy = Y/2;
-    let minx = X/2;
-    let miny = Y/2;
+    let maxx = X / 2;
+    let maxy = Y / 2;
+    let minx = X / 2;
+    let miny = Y / 2;
     projArray.forEach(p => {
-        if (p.live){
-        maxx = Math.max(maxx, p.x);
-        maxy = Math.max(maxy, p.y);
-        minx = Math.min(minx, p.x);
-        miny = Math.min(miny, p.y);}
+        if (p.live) {
+            maxx = Math.max(maxx, p.x);
+            maxy = Math.max(maxy, p.y);
+            minx = Math.min(minx, p.x);
+            miny = Math.min(miny, p.y);
+        }
     })
     sclxmax = (X / 2.1) / (maxx - (X / 2.0));
-    sclymax = (Y / 2.1) / (maxy - (Y / 2.0)) ;
+    sclymax = (Y / 2.1) / (maxy - (Y / 2.0));
     sclxmin = (X / 2.1) / ((X / 2.0) - minx);
     sclymin = (Y / 2.1) / ((Y / 2.0) - miny);
-    scl = Math.min(sclxmax,sclymax,sclxmin,sclymin, 1)
-    xoff=X/2*(1-scl);
+    scl = Math.min(Math.min(sclxmax, sclymax, sclxmin, sclymin, 1), scl + (1 - scl) * 0.05)
+
+
+    xoff = X / 2 * (1 - scl);
     yoff = Y / 2 * (1 - scl);
+
+
+}
+
+class Ring {
+    constructor(x, y,rmax) {
+        this.r = 0;
+        this.rmax=rmax
+        this.x = x;
+        this.y = y;
+        this.hue = 0;
+        this.lightness = 50;
+        this.alpha=1
+    }
+    update(){
+        this.r=this.r+1;
+        this.hue=this.hue+.5;
+        this.alpha=1-this.r/this.rmax;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
+        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+}
+class Explosion {
+
+    constructor(x, y, n) {
+        this.x = x;
+        this.y = y;
+        this.lw = 1;
+        this.t=0;
+        this.n = n;
+        this.color = "#FFAA00";
+        this.live = true
+        this.ringArray = []
+        this.ringArray.push(new Ring(x, y,n))
+    }
+    update() {
+        if (this.live) {
+            this.t++;
+            this.live = this.t < this.n
+            this.ringArray.forEach(ring => ring.update())
+            if (this.t%5==0 && this.t<this.n/2){
+                this.ringArray.push(new Ring(this.x, this.y))
+            }
+        }
+    }
+    draw() {
+        if (this.live) {
+            this.ringArray.forEach(r => r.draw())
+            // console.log("Draw Explosion",this.x,this.y)
+
+        }
+    }
 }
 
 let mouseDown = false;
@@ -308,8 +385,8 @@ let basex;
 
 const vscl = 2 // velocity vector scale
 const ascl = 5 // acceleration vector scale
-const projSize = 5
-const maxAge=1000
+const projSize = 3
+const maxAge = 500
 
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
@@ -325,6 +402,7 @@ setSize()
 let projArray = [];
 let baseArray = [];
 let planetArray = [];
+let explosionArray = [];
 generatePlanets(5)
 baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
 baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
