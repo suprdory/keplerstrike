@@ -326,19 +326,19 @@ function calcScl() {
 }
 
 class Ring {
-    constructor(x, y,rmax) {
+    constructor(x, y, rmax) {
         this.r = 0;
-        this.rmax=rmax
+        this.rmax = rmax
         this.x = x;
         this.y = y;
         this.hue = 0;
         this.lightness = 50;
-        this.alpha=1
+        this.alpha = 1
     }
-    update(){
-        this.r=this.r+1;
-        this.hue=this.hue+.5;
-        this.alpha=1-this.r/this.rmax;
+    update() {
+        this.r = this.r + 2;
+        this.hue = this.hue + 2;
+        this.alpha = 1 - this.r / this.rmax;
     }
     draw() {
         ctx.beginPath();
@@ -353,28 +353,26 @@ class Explosion {
         this.x = x;
         this.y = y;
         this.lw = 1;
-        this.t=0;
+        this.t = 0;
         this.n = n;
         this.color = "#FFAA00";
         this.live = true
         this.ringArray = []
-        this.ringArray.push(new Ring(x, y,n))
+        this.ringArray.push(new Ring(x, y, n))
     }
     update() {
         if (this.live) {
             this.t++;
             this.live = this.t < this.n
             this.ringArray.forEach(ring => ring.update())
-            if (this.t%5==0 && this.t<this.n/2){
-                this.ringArray.push(new Ring(this.x, this.y))
+            if (this.t % 5 == 0 && this.t < this.n / 2) {
+                this.ringArray.push(new Ring(this.x, this.y, this.n))
             }
         }
     }
     draw() {
         if (this.live) {
-            this.ringArray.forEach(r => r.draw())
-            // console.log("Draw Explosion",this.x,this.y)
-
+            this.ringArray.forEach(r => r.draw());
         }
     }
 }
