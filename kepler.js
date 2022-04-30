@@ -6,7 +6,7 @@ const cursor = {
 };
 function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
     //variables to be used when creating the arrow
-    var headlen = 10;
+    var headlen = 10*scl;
     var angle = Math.atan2(toy - fromy, tox - fromx);
 
     ctx.save();
@@ -59,7 +59,7 @@ class Body {
         ctx.beginPath();
         ctx.fillStyle = this.color;
         ctx.strokeStyle = this.color;
-        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r*scl, 0, 2 * Math.PI);
         ctx.stroke();
     }
 }
@@ -75,11 +75,11 @@ class Base extends Body {
     draw() {
         ctx.beginPath();
         ctx.strokeStyle = this.color;
-        ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
         ctx.stroke();
 
         // ctx.moveTo(this.x,this.y)
-        drawArrow(ctx, this.x, this.y, this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), 1, this.fillColor);
+        drawArrow(ctx, this.x * scl + xoff, this.y * scl+ yoff, (this.x + (this.r + this.sp) * Math.cos(this.th)) * scl + xoff, (this.y + (this.r + this.sp) * Math.sin(this.th)) * scl+yoff, scl*1, this.fillColor);
     }
     launch() {
         projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
@@ -95,6 +95,7 @@ class Projectile extends Body {
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
+        this.t=0
     }
     setAccel() {
         this.ud = 0;
@@ -120,6 +121,8 @@ class Projectile extends Body {
 
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
+            this.t=this.t+1;
+            if (this.t>maxAge) {this.live=false;}
         }
     }
     draw() {
@@ -164,8 +167,11 @@ function setColors() {
         generateHSLColor(hueWidth, hueStart, valueWidth, valueStart)))
 }
 function setSize() {
-    canvas.height = innerHeight;
-    canvas.width = innerWidth;
+    X = innerWidth;
+    Y= innerHeight;
+    canvas.height = Y;
+    canvas.width = X;
+
 }
 addEventListener('mousedown', e => {
     cursor.x = e.offsetX;
@@ -210,7 +216,7 @@ addEventListener('mousemove', e => {
         dth = (e.offsetX - cursor.x) * 0.01
         baseArray[basex].th = th0 + dth;
         dsp = (e.offsetY - cursor.y) * -0.5
-        baseArray[basex].sp = Math.max(0,Math.min(sp0 + dsp,maxspeed));
+        baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed));
         redraw()
     }
 });
@@ -240,7 +246,6 @@ function doubleClick(basex) {
     // console.log(basex)
     baseArray[basex].launch()
 }
-
 function redraw() {
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -260,25 +265,51 @@ function anim() {
         proj.detectCollision(baseArray)
         // proj.draw()
     })
+    calcScl()
     redraw()
     drawScores()
 }
-
 function drawScores() {
+
     ctx.font = "50px Arial";
-    ctx.strokeStyle=baseCol[0]
-    ctx.strokeText(baseArray[1].nhits, 10, canvas.height-10);
+    ctx.strokeStyle = baseCol[0]
+    ctx.strokeText(baseArray[1].nhits, 10, canvas.height - 10);
     ctx.strokeStyle = baseCol[1]
     ctx.strokeText(baseArray[0].nhits, 10, 50);
 }
 
-mouseDown = false;
+let X,Y=0;
+let xoff, yoff = 0;
+let scl = 1;
+function calcScl() {
+    let maxx = X/2;
+    let maxy = Y/2;
+    let minx = X/2;
+    let miny = Y/2;
+    projArray.forEach(p => {
+        if (p.live){
+        maxx = Math.max(maxx, p.x);
+        maxy = Math.max(maxy, p.y);
+        minx = Math.min(minx, p.x);
+        miny = Math.min(miny, p.y);}
+    })
+    sclxmax = (X / 2.1) / (maxx - (X / 2.0));
+    sclymax = (Y / 2.1) / (maxy - (Y / 2.0)) ;
+    sclxmin = (X / 2.1) / ((X / 2.0) - minx);
+    sclymin = (Y / 2.1) / ((Y / 2.0) - miny);
+    scl = Math.min(sclxmax,sclymax,sclxmin,sclymin, 1)
+    xoff=X/2*(1-scl);
+    yoff = Y / 2 * (1 - scl);
+}
+
+let mouseDown = false;
 let lastTouch = new Date().getTime();
 let basex;
 
 const vscl = 2 // velocity vector scale
 const ascl = 5 // acceleration vector scale
 const projSize = 5
+const maxAge=1000
 
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
