@@ -124,10 +124,10 @@ class Projectile extends Body {
     }
     draw() {
         super.draw()
-        if (this.live) {
-            drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
-            drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
-        }
+        // if (this.live) {
+        //     drawArrow(ctx, this.x, this.y, this.x + vscl * this.u, this.y + vscl * this.v, 1, "green")
+        //     drawArrow(ctx, this.x, this.y, this.x + ascl * this.ud, this.y + ascl * this.vd, 1, "red")
+        // }
     }
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
@@ -210,7 +210,7 @@ addEventListener('mousemove', e => {
         dth = (e.offsetX - cursor.x) * 0.01
         baseArray[basex].th = th0 + dth;
         dsp = (e.offsetY - cursor.y) * -0.5
-        baseArray[basex].sp = sp0 + dsp;
+        baseArray[basex].sp = Math.max(0,Math.min(sp0 + dsp,maxspeed));
         redraw()
     }
 });
@@ -219,7 +219,7 @@ addEventListener("touchmove", e => {
     dth = (e.touches[0].clientX - cursor.x) * 0.01
     baseArray[basex].th = th0 + dth;
     dsp = (e.touches[0].clientY - cursor.y) * -0.5
-    baseArray[basex].sp = sp0 + dsp;
+    baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     redraw()
 },
     { passive: false }
@@ -265,11 +265,11 @@ function anim() {
 }
 
 function drawScores() {
-    ctx.font = "30px Arial";
+    ctx.font = "50px Arial";
     ctx.strokeStyle=baseCol[0]
     ctx.strokeText(baseArray[1].nhits, 10, canvas.height-10);
     ctx.strokeStyle = baseCol[1]
-    ctx.strokeText(baseArray[0].nhits, 10, 30);
+    ctx.strokeText(baseArray[0].nhits, 10, 50);
 }
 
 mouseDown = false;
@@ -280,11 +280,12 @@ const vscl = 2 // velocity vector scale
 const ascl = 5 // acceleration vector scale
 const projSize = 5
 
-const projCol = ["#FF5555", "#5555FF"]
+const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
 
 const G = 100000
 const dt = 0.1
+const maxspeed = 50
 
 let bgFadeStyle = "rgba(0,0,0,.002)"
 let bgFillStyle = "rgba(0,0,0,1)"
