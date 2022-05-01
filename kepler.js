@@ -96,7 +96,7 @@ class Projectile extends Body {
         this.base = base;
         this.u = u;
         this.v = v;
-        this.lw = 3;
+        this.lw = 1;
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
@@ -149,10 +149,10 @@ class Projectile extends Body {
                         this.live = false;
                         if (b.isBase) {
                             b.nhits = b.nhits + 1
-                            explosionArray.push(new Explosion(this.x, this.y, 500))
+                            explosionArray.push(new Explosion(this.x, this.y, 20, 300))
                         }
                         else {
-                            explosionArray.push(new Explosion(this.x, this.y, 50))
+                            explosionArray.push(new Explosion(this.x, this.y, 5, 50))
                         }
                     }
                 }
@@ -328,45 +328,56 @@ function calcScl() {
 class Ring {
     constructor(x, y, rmax) {
         this.r = 0;
+        this.dr=2;
         this.rmax = rmax
         this.x = x;
         this.y = y;
-        this.hue = 0;
+        this.hue = 60;
         this.lightness = 50;
-        this.alpha = 1
+        this.alpha = 1;
+        this.live = true;
+        this.dhue= 100*this.dr/this.rmax;
+
     }
     update() {
-        this.r = this.r + 2;
-        this.hue = this.hue + 2;
-        this.alpha = 1 - this.r / this.rmax;
+        if (this.live) {
+            this.r = this.r + this.dr;
+            this.live = this.r < this.rmax;
+            this.hue = this.hue - this.dhue;
+            this.alpha = 1 - (this.r / this.rmax)**2;
+        }
     }
     draw() {
-        ctx.beginPath();
-        ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
-        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
-        ctx.stroke();
+        if (this.live) {
+            ctx.beginPath();
+            ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
+            ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
     }
 }
 class Explosion {
 
-    constructor(x, y, n) {
+    constructor(x, y, n, r) {
         this.x = x;
         this.y = y;
         this.lw = 1;
         this.t = 0;
         this.n = n;
-        this.color = "#FFAA00";
+        this.r = r;
+        // this.color = "#FFAA00";
         this.live = true
         this.ringArray = []
-        this.ringArray.push(new Ring(x, y, n))
+        this.ringArray.push(new Ring(x, y, r))
     }
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < this.n
+            this.live = this.t < this.n * this.r
             this.ringArray.forEach(ring => ring.update())
-            if (this.t % 5 == 0 && this.t < this.n / 2) {
-                this.ringArray.push(new Ring(this.x, this.y, this.n))
+
+            if (this.t % 5 == 0 && this.ringArray.length < this.n) {
+                this.ringArray.push(new Ring(this.x, this.y, this.r))
             }
         }
     }
@@ -405,4 +416,6 @@ generatePlanets(5)
 baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
 baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
+// explosionArray.push(new Explosion(100, 100, n=5, r=50))
+// explosionArray.push(new Explosion(100, 500, n=20, r=300))
 anim()
