@@ -61,7 +61,6 @@ class Body {
         this.lw = 1;
         this.color = color;
     }
-    cd
     draw() {
         ctx.beginPath();
         ctx.fillStyle = this.color;
@@ -71,6 +70,25 @@ class Body {
         ctx.stroke();
     }
 }
+class Planet extends Body {
+    constructor(x = Math.random() * canvas.width,
+        y = .2 * canvas.height + Math.random() * canvas.height * 0.6,
+        r = 5 + Math.random() * 50,
+        d = Math.random()+.2,
+    ) {
+        let m=d*r**2/50**2
+        let colorString = `hsl(${100+d*80}, 100%, 50%)`
+        super(x, y, r, m, colorString);
+
+    }
+}
+
+function generatePlanets(n) {
+    for (let i = 0; i < n; i++) {
+        planetArray[i] = new Planet();
+    }
+}
+
 class Base extends Body {
     constructor(n, x, y, r, color, th, sp) {
         super(x, y, r, 0, color);
@@ -133,7 +151,7 @@ class Projectile extends Body {
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
             this.t = this.t + 1;
-            if (this.t > maxAge) {
+            if (this.t > maxAge & (Math.abs(this.x - X / 2) > X+Y || Math.abs(this.y - Y / 2) > X+Y)) {
                 this.live = false;
                 this.visible = false;
             }
@@ -229,11 +247,7 @@ class Explosion {
     }
 }
 
-function generatePlanets(n) {
-    for (let i = 0; i < n; i++) {
-        planetArray[i] = new Body();
-    }
-}
+
 function generateHSLColor(hueWidth = Math.random() * 30, hueStart = 160, valueWidth = 20, valueStart = 50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
     return colorString;
@@ -382,7 +396,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     let pmaxy = Y;
     let pminx = 0;
     let pminy = 0;
-    
+
     projArray.forEach(p => {
         if (p.live) {
             pmaxx = Math.max(pmaxx, p.x + buf);
@@ -413,7 +427,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
         xpp = xp;
     }
     else { // too narrow, make wider
-        let ax = (Yp/AR - Xp) / 2
+        let ax = (Yp / AR - Xp) / 2
         xpp = [xp[0] - ax, xp[1] + ax];
         ypp = yp;
     }
