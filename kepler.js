@@ -225,18 +225,18 @@ addEventListener("touchstart", e => {
 );
 addEventListener('mousemove', e => {
     if (mouseDown) {
-        dth = (e.offsetX - cursor.x) * 0.01
+        dth = (e.offsetX - cursor.x) * 0.005
         baseArray[basex].th = th0 + dth;
-        dsp = (e.offsetY - cursor.y) * -0.5
+        dsp = (e.offsetY - cursor.y) * -0.25
         baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed));
         redraw()
     }
 });
 addEventListener("touchmove", e => {
     e.preventDefault();
-    dth = (e.touches[0].clientX - cursor.x) * 0.01
+    dth = (e.touches[0].clientX - cursor.x) * 0.005
     baseArray[basex].th = th0 + dth;
-    dsp = (e.touches[0].clientY - cursor.y) * -0.5
+    dsp = (e.touches[0].clientY - cursor.y) * -0.25
     baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     redraw()
 },
