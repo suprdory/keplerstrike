@@ -41,6 +41,12 @@ function drawArrow(ctx, fromx, fromy, tox, toy, arrowWidth, color) {
     ctx.stroke();
     ctx.restore();
 }
+function xtr(x) {
+    return (x + xoff) * scl;
+}
+function ytr(y) {
+    return (y + yoff) * scl;
+}
 class Body {
     constructor(
         x = Math.random() * canvas.width,
@@ -61,7 +67,7 @@ class Body {
         ctx.fillStyle = this.color;
         ctx.strokeStyle = this.color;
         ctx.lineWidth = this.lw;
-        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
+        ctx.arc(xtr(this.x), ytr(this.y), this.r * scl, 0, 2 * Math.PI);
         ctx.stroke();
     }
 }
@@ -78,11 +84,11 @@ class Base extends Body {
         ctx.beginPath();
         ctx.strokeStyle = this.color;
         ctx.lineWidth = this.lw;
-        ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
+        ctx.arc(xtr(this.x), ytr(this.y), this.r * scl, 0, 2 * Math.PI);
         ctx.stroke();
 
         // ctx.moveTo(this.x,this.y)
-        drawArrow(ctx, this.x * scl + xoff, this.y * scl + yoff, (this.x + (this.r + this.sp) * Math.cos(this.th)) * scl + xoff, (this.y + (this.r + this.sp) * Math.sin(this.th)) * scl + yoff, scl * 1, this.fillColor);
+        drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), scl * 1, this.fillColor);
     }
     launch() {
         projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
@@ -160,6 +166,68 @@ class Projectile extends Body {
         })
     }
 }
+class Ring {
+    constructor(x, y, rmax) {
+        this.r = 0;
+        this.dr = 2;
+        this.rmax = rmax
+        this.x = x;
+        this.y = y;
+        this.hue = 60;
+        this.lightness = 50;
+        this.alpha = 1;
+        this.live = true;
+        this.dhue = 100 * this.dr / this.rmax;
+
+    }
+    update() {
+        if (this.live) {
+            this.r = this.r + this.dr;
+            this.live = this.r < this.rmax;
+            this.hue = this.hue - this.dhue;
+            this.alpha = 1 - (this.r / this.rmax) ** 2;
+        }
+    }
+    draw() {
+        if (this.live) {
+            ctx.beginPath();
+            ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
+            ctx.arc(xtr(this.x), ytr(this.y), this.r * scl, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+    }
+}
+class Explosion {
+
+    constructor(x, y, n, r) {
+        this.x = x;
+        this.y = y;
+        this.lw = 1;
+        this.t = 0;
+        this.n = n;
+        this.r = r;
+        // this.color = "#FFAA00";
+        this.live = true
+        this.ringArray = []
+        this.ringArray.push(new Ring(x, y, r))
+    }
+    update() {
+        if (this.live) {
+            this.t++;
+            this.live = this.t < this.n * this.r
+            this.ringArray.forEach(ring => ring.update())
+
+            if (this.t % 5 == 0 && this.ringArray.length < this.n) {
+                this.ringArray.push(new Ring(this.x, this.y, this.r))
+            }
+        }
+    }
+    draw() {
+        if (this.live) {
+            this.ringArray.forEach(r => r.draw());
+        }
+    }
+}
 
 function generatePlanets(n) {
     for (let i = 0; i < n; i++) {
@@ -181,6 +249,13 @@ function setColors() {
 function setSize() {
     X = innerWidth;
     Y = innerHeight;
+    AR = Y / X;
+    // set initial bounding window
+    minx = 0;
+    miny = 0;
+    maxx = X;
+    maxy = Y;
+
     canvas.height = Y;
     canvas.width = X;
 
@@ -295,124 +370,85 @@ function drawScores() {
     ctx.strokeStyle = baseCol[1]
     ctx.strokeText(baseArray[0].nhits, 10, 50);
 }
-
-let X, Y = 0;
+let X, Y, AR, ARR, ARp;
+let maxx, maxy, minx, miny;
 let xoff, yoff = 0;
 let scl = 1;
-function calcScl() {
-    let maxx = X / 2;
-    let maxy = Y / 2;
-    let minx = X / 2;
-    let miny = Y / 2;
+let buf = 50
+function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
+    // find smallest bounding window, defined by extrema of projectiles and starting window
+    let xp, xpp, Xp, yp, ypp, Yp;
+    let pmaxx = X;
+    let pmaxy = Y;
+    let pminx = 0;
+    let pminy = 0;
+    
     projArray.forEach(p => {
         if (p.live) {
-            maxx = Math.max(maxx, p.x);
-            maxy = Math.max(maxy, p.y);
-            minx = Math.min(minx, p.x);
-            miny = Math.min(miny, p.y);
+            pmaxx = Math.max(pmaxx, p.x + buf);
+            pmaxy = Math.max(pmaxy, p.y + buf);
+            pminx = Math.min(pminx, p.x - buf);
+            pminy = Math.min(pminy, p.y - buf);
         }
     })
-    sclxmax = (X / 2.1) / (maxx - (X / 2.0));
-    sclymax = (Y / 2.1) / (maxy - (Y / 2.0));
-    sclxmin = (X / 2.1) / ((X / 2.0) - minx);
-    sclymin = (Y / 2.1) / ((Y / 2.0) - miny);
-    scl = Math.min(Math.min(sclxmax, sclymax, sclxmin, sclymin, 1), scl + (1 - scl) * 0.05)
+    // smooth bounding window changes
+    maxx = Math.max(pmaxx, maxx - (maxx - pmaxx) * zoomsmth);
+    maxy = Math.max(pmaxy, maxy - (maxy - pmaxy) * zoomsmth);
+    minx = Math.min(pminx, minx + (pminx - minx) * zoomsmth);
+    miny = Math.min(pminy, miny + (pminy - miny) * zoomsmth);
 
+    // adjust bounding window to fit aspect ratio
+    // single p, prime, new bounding window
+    xp = [minx, maxx];
+    yp = [miny, maxy];
+    Xp = xp[1] - xp[0];
+    Yp = yp[1] - yp[0];
+    ARp = Yp / Xp;
+    ARR = ARp / AR;
 
-    xoff = X / 2 * (1 - scl);
-    yoff = Y / 2 * (1 - scl);
-
-
-}
-
-class Ring {
-    constructor(x, y, rmax) {
-        this.r = 0;
-        this.dr=2;
-        this.rmax = rmax
-        this.x = x;
-        this.y = y;
-        this.hue = 60;
-        this.lightness = 50;
-        this.alpha = 1;
-        this.live = true;
-        this.dhue= 100*this.dr/this.rmax;
-
+    //p, doubple primes, window coords after aspect correction
+    if (ARR < 1) { // too short, make taller
+        let ax = (AR * Xp - Yp) / 2
+        ypp = [yp[0] - ax, yp[1] + ax];
+        xpp = xp;
     }
-    update() {
-        if (this.live) {
-            this.r = this.r + this.dr;
-            this.live = this.r < this.rmax;
-            this.hue = this.hue - this.dhue;
-            this.alpha = 1 - (this.r / this.rmax)**2;
-        }
+    else { // too narrow, make wider
+        let ax = (Yp/AR - Xp) / 2
+        xpp = [xp[0] - ax, xp[1] + ax];
+        ypp = yp;
     }
-    draw() {
-        if (this.live) {
-            ctx.beginPath();
-            ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
-            ctx.arc(this.x * scl + xoff, this.y * scl + yoff, this.r * scl, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-    }
-}
-class Explosion {
-
-    constructor(x, y, n, r) {
-        this.x = x;
-        this.y = y;
-        this.lw = 1;
-        this.t = 0;
-        this.n = n;
-        this.r = r;
-        // this.color = "#FFAA00";
-        this.live = true
-        this.ringArray = []
-        this.ringArray.push(new Ring(x, y, r))
-    }
-    update() {
-        if (this.live) {
-            this.t++;
-            this.live = this.t < this.n * this.r
-            this.ringArray.forEach(ring => ring.update())
-
-            if (this.t % 5 == 0 && this.ringArray.length < this.n) {
-                this.ringArray.push(new Ring(this.x, this.y, this.r))
-            }
-        }
-    }
-    draw() {
-        if (this.live) {
-            this.ringArray.forEach(r => r.draw());
-        }
-    }
+    // set scale and offset for drawing transforms
+    scl = X / (xpp[1] - xpp[0]);
+    xoff = -xpp[0];
+    yoff = -ypp[0];
 }
 
 let mouseDown = false;
 let lastTouch = new Date().getTime();
 let basex;
 
-const vscl = 2 // velocity vector scale
-const ascl = 5 // acceleration vector scale
-const projSize = 3
-const maxAge = 500
+const zoomsmth = 0.05;
+const vscl = 2; // velocity vector scale
+const ascl = 5; // acceleration vector scale
+const projSize = 3;
+const maxAge = 500;
 
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
 
-const G = 100000
-const dt = 0.1
-const maxspeed = 50
+const G = 100000;
+const dt = 0.1;
+const maxspeed = 50;
 
-let bgFadeStyle = "rgba(0,0,0,.002)"
-let bgFillStyle = "rgba(0,0,0,1)"
+let bgFadeStyle = "rgba(0,0,0,.002)";
+let bgFillStyle = "rgba(0,0,0,1)";
 
 setSize()
 let projArray = [];
 let baseArray = [];
 let planetArray = [];
 let explosionArray = [];
-generatePlanets(5)
+generatePlanets(7)
 baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
 baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
