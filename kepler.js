@@ -173,6 +173,7 @@ class Projectile extends Body {
                 if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
                     console.log("Boom!");
                     this.live = false;
+                    this.tracked = false;
                     if (b.isBase) {
                         b.nhits = b.nhits + 1
                         explosionArray.push(new Explosion(this.x, this.y, 20, 300))
