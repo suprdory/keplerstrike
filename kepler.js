@@ -71,16 +71,17 @@ class Body {
     }
 }
 class Planet extends Body {
-    constructor(x = Math.random() * canvas.width,
-        y = .2 * canvas.height + Math.random() * canvas.height * 0.6,
-        r = 5 + Math.random() * 50,
-        d = Math.random()+.2,
+    constructor(
+        x = 0.5 * X + 0.2 * X * (Math.random() - 1),
+        y = 0.8 * Y + 0.2 * Y * (Math.random() - 1),
+            r = 5 + Math.random() * 50,
+            d = Math.random() + .2,
     ) {
-        let m=d*r**2/50**2
-        let colorString = `hsl(${100+d*80}, 100%, 50%)`
-        super(x, y, r, m, colorString);
+    let m = d * r ** 2 / 50 ** 2
+    let colorString = `hsl(${100 + d * 80}, 100%, 50%)`
+    super(x, y, r, m, colorString);
 
-    }
+}
 }
 
 function generatePlanets(n) {
@@ -109,7 +110,7 @@ class Base extends Body {
         drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), scl * 1, this.fillColor);
     }
     launch() {
-        projArray.push(new Projectile(this.x, this.y, this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
+        projArray.push(new Projectile(this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
     }
 }
 class Projectile extends Body {
@@ -151,7 +152,7 @@ class Projectile extends Body {
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
             this.t = this.t + 1;
-            if (this.t > maxAge & (Math.abs(this.x - X / 2) > X+Y || Math.abs(this.y - Y / 2) > X+Y)) {
+            if (this.t > maxAge & (Math.abs(this.x - X / 2) > maxrange || Math.abs(this.y - Y / 2) > maxrange)) {
                 this.live = false;
                 this.visible = false;
             }
@@ -167,17 +168,15 @@ class Projectile extends Body {
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
             if (this.live) {
-                if (this.base != b.n) {
-                    if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
-                        console.log("Boom!");
-                        this.live = false;
-                        if (b.isBase) {
-                            b.nhits = b.nhits + 1
-                            explosionArray.push(new Explosion(this.x, this.y, 20, 300))
-                        }
-                        else {
-                            explosionArray.push(new Explosion(this.x, this.y, 5, 50))
-                        }
+                if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
+                    console.log("Boom!");
+                    this.live = false;
+                    if (b.isBase) {
+                        b.nhits = b.nhits + 1
+                        explosionArray.push(new Explosion(this.x, this.y, 20, 300))
+                    }
+                    else {
+                        explosionArray.push(new Explosion(this.x, this.y, 5, 50))
                     }
                 }
             }
@@ -450,9 +449,10 @@ const maxAge = 500;
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
 
-const G = 100000;
+const G = 200000;
 const dt = 0.1;
-const maxspeed = 50;
+const maxspeed = 20;
+const maxrange = X + Y * 2
 
 let bgFadeStyle = "rgba(0,0,0,.002)";
 let bgFillStyle = "rgba(0,0,0,1)";
@@ -462,7 +462,7 @@ let projArray = [];
 let baseArray = [];
 let planetArray = [];
 let explosionArray = [];
-generatePlanets(7)
+generatePlanets(1)
 baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
 baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
