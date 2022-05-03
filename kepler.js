@@ -72,13 +72,13 @@ class Body {
 }
 class Planet extends Body {
     constructor(
-        x = 0.5 * X + 0.2 * X * (Math.random() - 1),
-        y = 0.8 * Y + 0.2 * Y * (Math.random() - 1),
+        x = (0.5 * X) + (1.5 * X * (Math.random()-0.5 )),
+        y = (0.5 * Y) + (0.5 * Y * (Math.random() -0.5)),
             r = 5 + Math.random() * 50,
             d = Math.random() + .2,
     ) {
     let m = d * r ** 2 / 50 ** 2
-    let colorString = `hsl(${100 + d * 80}, 100%, 50%)`
+    let colorString = `hsl(${50 + d * 150}, 100%, 50%)`
     super(x, y, r, m, colorString);
 
 }
@@ -152,7 +152,7 @@ class Projectile extends Body {
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
             this.t = this.t + 1;
-            if (this.t > maxAge & (Math.abs(this.x - X / 2) > maxrange || Math.abs(this.y - Y / 2) > maxrange)) {
+            if (this.t > maxAge & (Math.abs(this.x - X / 2) > maxRange || Math.abs(this.y - Y / 2) > maxRange)) {
                 this.live = false;
                 this.visible = false;
             }
@@ -440,29 +440,32 @@ let mouseDown = false;
 let lastTouch = new Date().getTime();
 let basex;
 
+setSize()
 const zoomsmth = 0.05;
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
 const projSize = 3;
 const maxAge = 500;
+const maxRange = X + Y;
 
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
 
-const G = 200000;
+const G = 100000;
 const dt = 0.1;
-const maxspeed = 20;
-const maxrange = X + Y * 2
+const maxspeed = 50;
+
 
 let bgFadeStyle = "rgba(0,0,0,.002)";
 let bgFillStyle = "rgba(0,0,0,1)";
 
-setSize()
+
+
 let projArray = [];
 let baseArray = [];
 let planetArray = [];
 let explosionArray = [];
-generatePlanets(1)
+generatePlanets(10)
 baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
 baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
