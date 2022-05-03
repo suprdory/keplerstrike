@@ -72,16 +72,16 @@ class Body {
 }
 class Planet extends Body {
     constructor(
-        x = (0.5 * X) + (1.5 * X * (Math.random()-0.5 )),
-        y = (0.5 * Y) + (0.5 * Y * (Math.random() -0.5)),
-            r = 5 + Math.random() * 50,
-            d = Math.random() + .2,
+        x = (0.5 * X) + (1.5 * X * (Math.random() - 0.5)),
+        y = (0.5 * Y) + (0.5 * Y * (Math.random() - 0.5)),
+        r = 5 + Math.random() * 50,
+        d = Math.random() + .2,
     ) {
-    let m = d * r ** 2 / 50 ** 2
-    let colorString = `hsl(${50 + d * 150}, 100%, 50%)`
-    super(x, y, r, m, colorString);
+        let m = d * r ** 2 / 50 ** 2
+        let colorString = `hsl(${50 + d * 150}, 100%, 50%)`
+        super(x, y, r, m, colorString);
 
-}
+    }
 }
 
 function generatePlanets(n) {
@@ -118,6 +118,7 @@ class Projectile extends Body {
         super(x, y, r, m, color);
         this.live = true;
         this.visible = true;
+        this.tracked = true;
         this.base = base;
         this.u = u;
         this.v = v;
@@ -153,8 +154,9 @@ class Projectile extends Body {
             this.y = this.y + dt * this.v;
             this.t = this.t + 1;
             if (this.t > maxAge & (Math.abs(this.x - X / 2) > maxRange || Math.abs(this.y - Y / 2) > maxRange)) {
-                this.live = false;
-                this.visible = false;
+                // this.live = false;
+                // this.visible = false;
+                this.tracked = false
             }
         }
     }
@@ -397,7 +399,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     let pminy = 0;
 
     projArray.forEach(p => {
-        if (p.live) {
+        if (p.tracked) {
             pmaxx = Math.max(pmaxx, p.x + buf);
             pmaxy = Math.max(pmaxy, p.y + buf);
             pminx = Math.min(pminx, p.x - buf);
