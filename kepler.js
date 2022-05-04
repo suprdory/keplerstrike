@@ -316,18 +316,19 @@ addEventListener("touchstart", e => {
 );
 addEventListener('mousemove', e => {
     if (mouseDown) {
-        dth = (e.offsetX - cursor.x) * 0.005
+        dth = (e.offsetX - cursor.x) * dth_sens;
         baseArray[basex].th = th0 + dth;
-        dsp = (e.offsetY - cursor.y) * -0.25
+        dsp = (e.offsetY - cursor.y) * -dsp_sens;
         baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed));
         redraw()
     }
 });
+
 addEventListener("touchmove", e => {
     e.preventDefault();
-    dth = (e.touches[0].clientX - cursor.x) * 0.005
+    dth = (e.touches[0].clientX - cursor.x) * dth_sens
     baseArray[basex].th = th0 + dth;
-    dsp = (e.touches[0].clientY - cursor.y) * -0.25
+    dsp = (e.touches[0].clientY - cursor.y) * -dsp_sens
     baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     redraw()
 },
@@ -450,6 +451,8 @@ const ascl = 5; // acceleration vector scale
 const projSize = 3;
 const maxAge = 500;
 const maxRange = X + Y;
+let dth_sens = 0.003;
+let dsp_sens = 0.15;
 
 const projCol = ["#FF7777", "#7777FF"]
 const baseCol = ["#FFBBBB", "#BBBBFF"]
