@@ -169,7 +169,7 @@ class Projectile extends Body {
     }
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
-            if (this.live) {
+            if (this.live & b != this) {
                 if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
                     console.log("Boom!");
                     this.live = false;
@@ -364,7 +364,6 @@ function anim() {
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    planetArray.forEach((planet) => planet.draw())
     explosionArray.forEach((e) => {
         e.update()
     })
@@ -372,6 +371,7 @@ function anim() {
         proj.update()
         proj.detectCollision(planetArray)
         proj.detectCollision(baseArray)
+        proj.detectCollision(projArray)
         // proj.draw()
     })
 
