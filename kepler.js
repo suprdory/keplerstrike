@@ -72,7 +72,8 @@ class Body {
 }
 class Planet extends Body {
     constructor(
-        x = (0.5 * X) + (1.5 * X * (Math.random() - 0.5)),
+        // x = (0.5 * X) + (1.5 * X * (Math.random() - 0.5)),
+        x = (0.5 * X) + (1.5 * 2000 * (Math.random() - 0.5)),
         y = (0.5 * Y) + (0.5 * Y * (Math.random() - 0.5)),
         r = 5 + Math.random() * 50,
         d = Math.random() + .2,
@@ -122,7 +123,7 @@ class Projectile extends Body {
         this.base = base;
         this.u = u;
         this.v = v;
-        this.lw = 1;
+        this.lw = 1.5;
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
@@ -440,11 +441,29 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     yoff = -ypp[0];
 }
 
+function initalize() {
+    setSize()
+    nP=Math.round(Y/30);
+    generatePlanets(nP)
+    baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
+    baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
+}
+
+
+let projArray = [];
+let baseArray = [];
+let planetArray = [];
+let explosionArray = [];
+
 let mouseDown = false;
 let lastTouch = new Date().getTime();
 let basex;
 
-setSize()
+const projCol = ["#FFBBBB", "#BBBBFF"]
+const baseCol = ["#FF9999", "#9999FF"]
+
+initalize();
+
 const zoomsmth = 0.05;
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
@@ -454,26 +473,17 @@ const maxRange = X + Y;
 let dth_sens = 0.003;
 let dsp_sens = 0.15;
 
-const projCol = ["#FF7777", "#7777FF"]
-const baseCol = ["#FFBBBB", "#BBBBFF"]
 
-const G = 100000;
+
+const G = 200000;
 const dt = 0.1;
 const maxspeed = 50;
-
 
 let bgFadeStyle = "rgba(0,0,0,.002)";
 let bgFillStyle = "rgba(0,0,0,1)";
 
 
 
-let projArray = [];
-let baseArray = [];
-let planetArray = [];
-let explosionArray = [];
-generatePlanets(10)
-baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
-baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 
 // explosionArray.push(new Explosion(100, 100, n=5, r=50))
 // explosionArray.push(new Explosion(100, 500, n=20, r=300))
