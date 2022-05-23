@@ -129,7 +129,7 @@ class Projectile extends Body {
         this.vd = 0;
         this.setAccel();
         this.t = 0
-        this.tangible=false;
+        this.tangible=false; //can collide?
     }
     setAccel() {
         this.ud = 0;
