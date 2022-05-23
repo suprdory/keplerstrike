@@ -355,12 +355,7 @@ addEventListener("touchend", e => {
     { passive: false }
 );
 addEventListener('dblclick', e => {
-    if (basex < 2) {
         doubleClick(basex);
-    }
-    else {
-        trackAll = !trackAll;
-    }
 });
 function doubleClick(basex) {
     // console.log(basex)
@@ -368,7 +363,7 @@ function doubleClick(basex) {
         baseArray[basex].launch()
     }
     else {
-
+        trackAll = !trackAll;
     }
 }
 function redraw() {
