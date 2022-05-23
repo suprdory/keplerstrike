@@ -111,7 +111,7 @@ class Base extends Body {
         drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), scl * 1, this.fillColor);
     }
     launch() {
-        projArray.push(new Projectile(this.x + (this.r + this.sp) * Math.cos(this.th), this.y + (this.r + this.sp) * Math.sin(this.th), this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
+        projArray.push(new Projectile(this.x + (projSize + this.r + this.sp) * Math.cos(this.th), this.y + (projSize + this.r + this.sp) * Math.sin(this.th), this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
     }
 }
 class Projectile extends Body {
@@ -283,11 +283,14 @@ addEventListener('mousedown', e => {
     mouseDown = true;
     lastTouch = new Date().getTime();
 
-    if (e.offsetY > canvas.height / 2) {
+    if (e.offsetY > canvas.height * 2 / 3) {
         basex = 0;
     }
-    else {
+    else if (e.offsetY < canvas.height * 1 / 3) {
         basex = 1;
+    }
+    else {
+        basex = 2;
     }
     th0 = baseArray[basex].th;
     sp0 = baseArray[basex].sp;
@@ -303,12 +306,16 @@ addEventListener("touchstart", e => {
     lastTouch = new Date().getTime()
     cursor.x = e.touches[0].clientX;
     cursor.y = e.touches[0].clientY;
-    if (cursor.y > canvas.height / 2) {
+    if (cursor.y > canvas.height * 2 / 3) {
         basex = 0;
     }
-    else {
+    else if (cursor.y < canvas.height * 1 / 3) {
         basex = 1;
     }
+    else {
+        basex = 3;
+    }
+
     mouseDown = true;
     th0 = baseArray[basex].th;
     sp0 = baseArray[basex].sp;
@@ -345,11 +352,21 @@ addEventListener("touchend", e => {
     { passive: false }
 );
 addEventListener('dblclick', e => {
-    doubleClick(basex);
+    if (basex < 2) {
+        doubleClick(basex);
+    }
+    else {
+        trackAll = !trackAll;
+    }
 });
 function doubleClick(basex) {
     // console.log(basex)
-    baseArray[basex].launch()
+    if (basex < 2) {
+        baseArray[basex].launch()
+    }
+    else {
+
+    }
 }
 function redraw() {
     ctx.fillStyle = bgFillStyle;
@@ -405,7 +422,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     let pminy = 0;
 
     projArray.forEach(p => {
-        if (p.tracked) {
+        if (p.tracked || trackAll) {
             pmaxx = Math.max(pmaxx, p.x + buf);
             pmaxy = Math.max(pmaxy, p.y + buf);
             pminx = Math.min(pminx, p.x - buf);
@@ -446,7 +463,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
 
 function initalize() {
     setSize()
-    nP=Math.round(Y/30);
+    nP = Math.round(Y / 30);
     generatePlanets(nP)
     baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
     baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
@@ -459,6 +476,7 @@ let planetArray = [];
 let explosionArray = [];
 
 let mouseDown = false;
+let trackAll = true;
 let lastTouch = new Date().getTime();
 let basex;
 
