@@ -443,11 +443,17 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
         }
     })
 
-    // smooth bounding window changes
-    maxx = Math.max(pmaxx, maxx - (maxx - pmaxx) * zoomsmth);
-    maxy = Math.max(pmaxy, maxy - (maxy - pmaxy) * zoomsmth);
-    minx = Math.min(pminx, minx + (pminx - minx) * zoomsmth);
-    miny = Math.min(pminy, miny + (pminy - miny) * zoomsmth);
+    // // smooth bounding window changes - zooming in
+    // maxx = Math.max(pmaxx, maxx - (maxx - pmaxx) * zoomsmth);
+    // maxy = Math.max(pmaxy, maxy - (maxy - pmaxy) * zoomsmth);
+    // minx = Math.min(pminx, minx + (pminx - minx) * zoomsmth);
+    // miny = Math.min(pminy, miny + (pminy - miny) * zoomsmth);
+// zooming out
+    let zoomspd=0.15;
+    maxx = maxx - (maxx - pmaxx) * zoomspd;
+    maxy = maxy - (maxy - pmaxy) * zoomspd;
+    minx = minx + (pminx - minx) * zoomspd;
+    miny = miny + (pminy - miny) * zoomspd;
 
     // adjust bounding window to fit aspect ratio
     // single p, prime, new bounding window
@@ -458,7 +464,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     ARp = Yp / Xp;
     ARR = ARp / AR;
 
-    //p, doubple primes, window coords after aspect correction
+    //p, double primes, window coords after aspect correction
     if (ARR < 1) { // too short, make taller
         let ax = (AR * Xp - Yp) / 2
         ypp = [yp[0] - ax, yp[1] + ax];
