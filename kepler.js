@@ -174,7 +174,7 @@ class Projectile extends Body {
         bodyArray.forEach(b => {
             if (b.tangible & b != this) { // check it's live and and don't allow self collision
                 if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
-                    console.log("Boom!");
+                    // console.log("Boom!");
                     this.live = false;
                     this.tracked = false;
                     this.tangible = true;
