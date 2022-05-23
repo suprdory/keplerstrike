@@ -169,7 +169,7 @@ class Projectile extends Body {
     }
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
-            if (this.live & b != this) {
+            if (this.live & b != this) { // check it's live and and don't allow self collision
                 if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
                     console.log("Boom!");
                     this.live = false;
@@ -371,7 +371,10 @@ function anim() {
         proj.update()
         proj.detectCollision(planetArray)
         proj.detectCollision(baseArray)
-        proj.detectCollision(projArray)
+        if (!proj.live) {
+            proj.detectCollision(projArray)
+        }
+
         // proj.draw()
     })
 
