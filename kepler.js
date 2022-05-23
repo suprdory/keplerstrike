@@ -238,7 +238,7 @@ class Explosion {
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < this.n * this.r
+            this.live = this.t < (this.r/2 + 5 * this.n)
             this.ringArray.forEach(ring => ring.update())
 
             if (this.t % 5 == 0 && this.ringArray.length < this.n) {
@@ -433,6 +433,16 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
             pminy = Math.min(pminy, p.y - buf);
         }
     })
+
+    explosionArray.forEach(p => {
+        if (p.live) {
+            pmaxx = Math.max(pmaxx, p.x + buf);
+            pmaxy = Math.max(pmaxy, p.y + buf);
+            pminx = Math.min(pminx, p.x - buf);
+            pminy = Math.min(pminy, p.y - buf);
+        }
+    })
+
     // smooth bounding window changes
     maxx = Math.max(pmaxx, maxx - (maxx - pmaxx) * zoomsmth);
     maxy = Math.max(pmaxy, maxy - (maxy - pmaxy) * zoomsmth);
