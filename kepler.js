@@ -60,6 +60,7 @@ class Body {
         this.m = m;
         this.lw = 1;
         this.color = color;
+        this.tangible=true;
     }
     draw() {
         ctx.beginPath();
@@ -128,6 +129,7 @@ class Projectile extends Body {
         this.vd = 0;
         this.setAccel();
         this.t = 0
+        this.tangible=false;
     }
     setAccel() {
         this.ud = 0;
@@ -170,11 +172,12 @@ class Projectile extends Body {
     }
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
-            if (this.live & b != this) { // check it's live and and don't allow self collision
+            if (b.tangible & b != this) { // check it's live and and don't allow self collision
                 if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
                     console.log("Boom!");
                     this.live = false;
                     this.tracked = false;
+                    this.tangible=true;
                     if (b.isBase) {
                         b.nhits = b.nhits + 1
                         explosionArray.push(new Explosion(this.x, this.y, 20, 300))
@@ -313,7 +316,7 @@ addEventListener("touchstart", e => {
         basex = 1;
     }
     else {
-        basex = 3;
+        basex = 2;
     }
 
     mouseDown = true;
@@ -387,9 +390,9 @@ function anim() {
     })
     projArray.forEach((proj) => {
         proj.update()
-        proj.detectCollision(planetArray)
-        proj.detectCollision(baseArray)
-        if (!proj.live) {
+        if (proj.live) {
+            proj.detectCollision(planetArray)
+            proj.detectCollision(baseArray)
             proj.detectCollision(projArray)
         }
 
