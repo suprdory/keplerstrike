@@ -60,7 +60,7 @@ class Body {
         this.m = m;
         this.lw = 1;
         this.color = color;
-        this.tangible=true;
+        this.tangible = true;
     }
     draw() {
         ctx.beginPath();
@@ -129,7 +129,7 @@ class Projectile extends Body {
         this.vd = 0;
         this.setAccel();
         this.t = 0
-        this.tangible=false; //can collide?
+        this.tangible = false; //can collide?
     }
     setAccel() {
         this.ud = 0;
@@ -177,7 +177,7 @@ class Projectile extends Body {
                     console.log("Boom!");
                     this.live = false;
                     this.tracked = false;
-                    this.tangible=true;
+                    this.tangible = true;
                     if (b.isBase) {
                         b.nhits = b.nhits + 1
                         explosionArray.push(new Explosion(this.x, this.y, 20, 300))
@@ -295,8 +295,10 @@ addEventListener('mousedown', e => {
     else {
         basex = 2;
     }
-    th0 = baseArray[basex].th;
-    sp0 = baseArray[basex].sp;
+    if (basex < 2) {
+        th0 = baseArray[basex].th;
+        sp0 = baseArray[basex].sp;
+    }
 });
 addEventListener("touchstart", e => {
     e.preventDefault();
@@ -320,13 +322,15 @@ addEventListener("touchstart", e => {
     }
 
     mouseDown = true;
-    th0 = baseArray[basex].th;
-    sp0 = baseArray[basex].sp;
+    if (basex < 2) {
+        th0 = baseArray[basex].th;
+        sp0 = baseArray[basex].sp;
+    }
 },
     { passive: false }
 );
 addEventListener('mousemove', e => {
-    if (mouseDown) {
+    if (mouseDown & basex < 2) {
         dth = (e.offsetX - cursor.x) * dth_sens;
         baseArray[basex].th = th0 + dth;
         dsp = (e.offsetY - cursor.y) * -dsp_sens;
@@ -337,10 +341,12 @@ addEventListener('mousemove', e => {
 
 addEventListener("touchmove", e => {
     e.preventDefault();
-    dth = (e.touches[0].clientX - cursor.x) * dth_sens
-    baseArray[basex].th = th0 + dth;
-    dsp = (e.touches[0].clientY - cursor.y) * -dsp_sens
-    baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
+    if (basex < 2) {
+        dth = (e.touches[0].clientX - cursor.x) * dth_sens
+        baseArray[basex].th = th0 + dth;
+        dsp = (e.touches[0].clientY - cursor.y) * -dsp_sens
+        baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
+    }
     redraw()
 },
     { passive: false }
@@ -355,7 +361,7 @@ addEventListener("touchend", e => {
     { passive: false }
 );
 addEventListener('dblclick', e => {
-        doubleClick(basex);
+    doubleClick(basex);
 });
 function doubleClick(basex) {
     // console.log(basex)
