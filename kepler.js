@@ -193,7 +193,7 @@ class Projectile extends Body {
 class Ring {
     constructor(x, y, rmax) {
         this.r = 0;
-        this.dr = 2;
+        this.dr = expSpeed;
         this.rmax = rmax
         this.x = x;
         this.y = y;
@@ -222,7 +222,6 @@ class Ring {
     }
 }
 class Explosion {
-
     constructor(x, y, n, r) {
         this.x = x;
         this.y = y;
@@ -230,7 +229,6 @@ class Explosion {
         this.t = 0;
         this.n = n;
         this.r = r;
-        // this.color = "#FFAA00";
         this.live = true
         this.ringArray = []
         this.ringArray.push(new Ring(x, y, r))
@@ -238,7 +236,7 @@ class Explosion {
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < (this.r / 2 + 5 * this.n)
+            this.live = this.t < (this.r / expSpeed + 5 * this.n)
             this.ringArray.forEach(ring => ring.update())
 
             if (this.t % 5 == 0 && this.ringArray.length < this.n) {
@@ -471,7 +469,6 @@ function initalize() {
     baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 }
 
-
 let projArray = [];
 let baseArray = [];
 let planetArray = [];
@@ -484,24 +481,19 @@ let basex;
 
 const projCol = ["#FFBBBB", "#BBBBFF"]
 const baseCol = ["#FF9999", "#9999FF"]
-
-initalize();
-
-const zoomsmth = 0.15;
+const zoomsmth = 0.15; // zoom speed, 1 is instant
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
-const projSize = 3;
-const maxAge = 500;
-const maxRange = X + Y;
-let dth_sens = 0.003;
-let dsp_sens = 0.15;
+const projSize = 3; // projectile radius
+const maxAge = 500; // timesteps to keep tracking projectile
+const expSpeed = 2; // explosion ring speed
+const maxRange = X + Y; // range to keep tracking projectile
+const dth_sens = 0.003; // angle adjustment sensitivity
+const dsp_sens = 0.15; // speed adjustment sensitivity
+const G = 200000; // gravitational constant in who-knows-what units
+const dt = 0.1; // time step
+const maxspeed = 50; // max launch speed
+const bgFillStyle = "rgba(0,0,0,1)"; // background color + blur, 1 for no blur.
 
-
-const G = 200000;
-const dt = 0.1;
-const maxspeed = 50;
-
-let bgFadeStyle = "rgba(0,0,0,.002)";
-let bgFillStyle = "rgba(0,0,0,1)";
-
+initalize();
 anim()
