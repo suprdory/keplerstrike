@@ -173,7 +173,13 @@ class Projectile extends Body {
     detectCollision(bodyArray) {
         bodyArray.forEach(b => {
             if (b.tangible & b != this) { // check it's live and and don't allow self collision
-                if ((b.x - this.x) ** 2 + (b.y - this.y) ** 2 < (b.r + this.r) ** 2) {
+                let dsq = (b.x - this.x) ** 2 + (b.y - this.y) ** 2 - (b.r + this.r) ** 2;
+                if (dsq < 0) {
+                    // back up to linear estimate of collision site
+                    let d = ((b.x - this.x) ** 2 + (b.y - this.y) ** 2)**0.5 - (b.r + this.r);
+                    let th = Math.atan2(this.v, this.u)
+                    this.x = this.x + d * Math.cos(th);
+                    this.y = this.y + d * Math.sin(th);
                     // console.log("Boom!");
                     this.live = false;
                     this.tracked = false;
@@ -289,8 +295,8 @@ addEventListener('mousemove', e => {
     }
 });
 addEventListener('mouseup', e => {
-        mouseDown = false;
-    });
+    mouseDown = false;
+});
 
 addEventListener("touchstart", e => {
     e.preventDefault();
@@ -333,7 +339,7 @@ function pointerDownHandler(x, y) {
     }
 }
 
-function pointerMoveHandler(x,y){
+function pointerMoveHandler(x, y) {
     if (basex < 2) {
         dth = (x - cursor.x) * dth_sens
         baseArray[basex].th = th0 + dth;
@@ -475,7 +481,7 @@ let planetArray = [];
 let explosionArray = [];
 
 let mouseDown = false;
-let trackAll = true;
+let trackAll = false;
 let lastTouch = new Date().getTime();
 let basex;
 
