@@ -238,7 +238,7 @@ class Explosion {
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < (this.r/2 + 5 * this.n)
+            this.live = this.t < (this.r / 2 + 5 * this.n)
             this.ringArray.forEach(ring => ring.update())
 
             if (this.t % 5 == 0 && this.ringArray.length < this.n) {
@@ -252,7 +252,6 @@ class Explosion {
         }
     }
 }
-
 
 function generateHSLColor(hueWidth = Math.random() * 30, hueStart = 160, valueWidth = 20, valueStart = 50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
@@ -278,39 +277,47 @@ function setSize() {
 
     canvas.height = Y;
     canvas.width = X;
-
 }
-addEventListener('mousedown', e => {
-    cursor.x = e.offsetX;
-    cursor.y = e.offsetY;
-    mouseDown = true;
-    lastTouch = new Date().getTime();
 
-    if (e.offsetY > canvas.height * 2 / 3) {
-        basex = 0;
-    }
-    else if (e.offsetY < canvas.height * 1 / 3) {
-        basex = 1;
-    }
-    else {
-        basex = 2;
-    }
-    if (basex < 2) {
-        th0 = baseArray[basex].th;
-        sp0 = baseArray[basex].sp;
+addEventListener("mousedown", e => {
+    // e.preventDefault();
+    pointerDownHandler(e.offsetX, e.offsetY);
+},
+    // { passive: false }
+);
+addEventListener('mousemove', e => {
+    if (mouseDown) {
+        pointerMoveHandler(e.offsetX, e.offsetY)
     }
 });
+addEventListener('mouseup', e => {
+        mouseDown = false;
+    });
+
 addEventListener("touchstart", e => {
     e.preventDefault();
+    pointerDownHandler(e.touches[0].clientX, e.touches[0].clientY);
+},
+    { passive: false }
+);
+addEventListener("touchmove", e => {
+    e.preventDefault();
+    pointerMoveHandler(e.touches[0].clientX, e.touches[0].clientY)
+},
+    { passive: false }
+);
+
+
+function pointerDownHandler(x, y) {
     let now = new Date().getTime();
     let timeSince = now - lastTouch;
     if (timeSince < 300) {
         //double touch
-        doubleClick(basex);
+        doubleClickHandler(basex);
     }
     lastTouch = new Date().getTime()
-    cursor.x = e.touches[0].clientX;
-    cursor.y = e.touches[0].clientY;
+    cursor.x = x;
+    cursor.y = y;
     if (cursor.y > canvas.height * 2 / 3) {
         basex = 0;
     }
@@ -326,44 +333,18 @@ addEventListener("touchstart", e => {
         th0 = baseArray[basex].th;
         sp0 = baseArray[basex].sp;
     }
-},
-    { passive: false }
-);
-addEventListener('mousemove', e => {
-    if (mouseDown & basex < 2) {
-        dth = (e.offsetX - cursor.x) * dth_sens;
-        baseArray[basex].th = th0 + dth;
-        dsp = (e.offsetY - cursor.y) * -dsp_sens;
-        baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed));
-        redraw()
-    }
-});
+}
 
-addEventListener("touchmove", e => {
-    e.preventDefault();
+function pointerMoveHandler(x,y){
     if (basex < 2) {
-        dth = (e.touches[0].clientX - cursor.x) * dth_sens
+        dth = (x - cursor.x) * dth_sens
         baseArray[basex].th = th0 + dth;
-        dsp = (e.touches[0].clientY - cursor.y) * -dsp_sens
+        dsp = (y - cursor.y) * -dsp_sens
         baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     }
-    redraw()
-},
-    { passive: false }
-);
-addEventListener('mouseup', e => {
-    mouseDown = false;
-});
-addEventListener("touchend", e => {
-    e.preventDefault();
-    mouseDown = false;
-},
-    { passive: false }
-);
-addEventListener('dblclick', e => {
-    doubleClick(basex);
-});
-function doubleClick(basex) {
+}
+
+function doubleClickHandler(basex) {
     // console.log(basex)
     if (basex < 2) {
         baseArray[basex].launch()
@@ -372,6 +353,7 @@ function doubleClick(basex) {
         trackAll = !trackAll;
     }
 }
+
 function redraw() {
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -379,8 +361,8 @@ function redraw() {
     projArray.forEach((x) => x.draw())
     baseArray.forEach((x) => x.draw())
     explosionArray.forEach((x) => x.draw())
-
 }
+
 function anim() {
     requestAnimationFrame(anim);
     ctx.fillStyle = bgFillStyle;
@@ -448,12 +430,12 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     // maxy = Math.max(pmaxy, maxy - (maxy - pmaxy) * zoomsmth);
     // minx = Math.min(pminx, minx + (pminx - minx) * zoomsmth);
     // miny = Math.min(pminy, miny + (pminy - miny) * zoomsmth);
-// zooming out
-    let zoomspd=0.15;
-    maxx = maxx - (maxx - pmaxx) * zoomspd;
-    maxy = maxy - (maxy - pmaxy) * zoomspd;
-    minx = minx + (pminx - minx) * zoomspd;
-    miny = miny + (pminy - miny) * zoomspd;
+    // zooming out
+    // let zoomspd = 0.15;
+    maxx = maxx - (maxx - pmaxx) * zoomsmth;
+    maxy = maxy - (maxy - pmaxy) * zoomsmth;
+    minx = minx + (pminx - minx) * zoomsmth;
+    miny = miny + (pminy - miny) * zoomsmth;
 
     // adjust bounding window to fit aspect ratio
     // single p, prime, new bounding window
@@ -505,7 +487,7 @@ const baseCol = ["#FF9999", "#9999FF"]
 
 initalize();
 
-const zoomsmth = 0.05;
+const zoomsmth = 0.15;
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
 const projSize = 3;
@@ -515,7 +497,6 @@ let dth_sens = 0.003;
 let dsp_sens = 0.15;
 
 
-
 const G = 200000;
 const dt = 0.1;
 const maxspeed = 50;
@@ -523,9 +504,4 @@ const maxspeed = 50;
 let bgFadeStyle = "rgba(0,0,0,.002)";
 let bgFillStyle = "rgba(0,0,0,1)";
 
-
-
-
-// explosionArray.push(new Explosion(100, 100, n=5, r=50))
-// explosionArray.push(new Explosion(100, 500, n=20, r=300))
 anim()
