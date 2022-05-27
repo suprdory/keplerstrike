@@ -58,7 +58,7 @@ class Body {
         this.y = y;
         this.r = r;
         this.m = m;
-        this.lw = 1*baseLW;
+        this.lw = 1 * baseLW;
         this.color = color;
         this.tangible = true;
     }
@@ -102,7 +102,7 @@ class Base extends Body {
         ctx.stroke();
 
         // ctx.moveTo(this.x,this.y)
-        drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), 1*baseLW, this.fillColor);
+        drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), 1 * baseLW, this.fillColor);
     }
     launch() {
         projArray.push(new Projectile(this.x + (projSize + this.r + this.sp) * Math.cos(this.th), this.y + (projSize + this.r + this.sp) * Math.sin(this.th), this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
@@ -117,7 +117,7 @@ class Projectile extends Body {
         this.base = base;
         this.u = u;
         this.v = v;
-        this.lw = 1.5*baseLW;
+        this.lw = 1.5 * baseLW;
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
@@ -214,7 +214,7 @@ class Ring {
     draw() {
         if (this.live) {
             ctx.beginPath();
-            ctx.lineWidth=1*baseLW;
+            ctx.lineWidth = 1 * baseLW;
             ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
             ctx.arc(xtr(this.x), ytr(this.y), this.r * scl, 0, 2 * Math.PI);
             ctx.stroke();
@@ -225,10 +225,11 @@ class Explosion {
     constructor(x, y, n, r) {
         this.x = x;
         this.y = y;
-        this.lw = 1*baseLW;
+        this.lw = 1 * baseLW;
         this.t = 0;
         this.n = n;
         this.r = r;
+        this.omg=5;
         this.live = true
         this.ringArray = []
         this.ringArray.push(new Ring(x, y, r))
@@ -236,10 +237,10 @@ class Explosion {
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < (this.r / expSpeed + 5 * this.n)
+            this.live = this.t < (this.r / expSpeed + this.omg * this.n)
             this.ringArray.forEach(ring => ring.update())
 
-            if (this.t % 5 == 0 && this.ringArray.length < this.n) {
+            if (this.t % this.omg == 0 && this.ringArray.length < this.n) {
                 this.ringArray.push(new Ring(this.x, this.y, this.r))
             }
         }
@@ -384,13 +385,13 @@ function anim() {
 }
 function drawScores() {
 
-    ctx.font = 40*window.devicePixelRatio+"px Arial";
-    ctx.textBaseline="alphabetic"
+    ctx.font = 40 * window.devicePixelRatio + "px Arial";
+    ctx.textBaseline = "alphabetic"
     ctx.strokeStyle = baseCol[0]
-    ctx.strokeText(baseArray[1].nhits, 8*window.devicePixelRatio, canvas.height - 10*window.devicePixelRatio);
+    ctx.strokeText(baseArray[1].nhits, 8 * window.devicePixelRatio, canvas.height - 10 * window.devicePixelRatio);
     ctx.strokeStyle = baseCol[1]
-    ctx.textBaseline="hanging"
-    ctx.strokeText(baseArray[0].nhits, 8*window.devicePixelRatio, 8*window.devicePixelRatio);
+    ctx.textBaseline = "hanging"
+    ctx.strokeText(baseArray[0].nhits, 8 * window.devicePixelRatio, 8 * window.devicePixelRatio);
 }
 function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     // find smallest bounding window, defined by extrema of projectiles and starting window
@@ -458,6 +459,7 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
 function initalize() {
     setSize()
     nP = Math.round(Y / 30);
+
     generatePlanets(nP)
     baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
     baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
@@ -466,7 +468,7 @@ let X, Y, AR, ARR, ARp;
 let maxx, maxy, minx, miny;
 let xoff, yoff = 0;
 let scl = 1;
-let buf = 50
+let buf = 50;
 
 let projArray = [];
 let baseArray = [];
