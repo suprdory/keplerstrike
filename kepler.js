@@ -58,7 +58,7 @@ class Body {
         this.y = y;
         this.r = r;
         this.m = m;
-        this.lw = 1;
+        this.lw = 1 * baseLW;
         this.color = color;
         this.tangible = true;
     }
@@ -85,13 +85,6 @@ class Planet extends Body {
 
     }
 }
-
-function generatePlanets(n) {
-    for (let i = 0; i < n; i++) {
-        planetArray[i] = new Planet();
-    }
-}
-
 class Base extends Body {
     constructor(n, x, y, r, color, th, sp) {
         super(x, y, r, 0, color);
@@ -109,7 +102,7 @@ class Base extends Body {
         ctx.stroke();
 
         // ctx.moveTo(this.x,this.y)
-        drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), scl * 1, this.fillColor);
+        drawArrow(ctx, xtr(this.x), ytr(this.y), xtr(this.x + (this.r + this.sp) * Math.cos(this.th)), ytr(this.y + (this.r + this.sp) * Math.sin(this.th)), 1 * baseLW, this.fillColor);
     }
     launch() {
         projArray.push(new Projectile(this.x + (projSize + this.r + this.sp) * Math.cos(this.th), this.y + (projSize + this.r + this.sp) * Math.sin(this.th), this.sp * Math.cos(this.th), this.sp * Math.sin(this.th), projSize, 1, projCol[this.n], this.n))
@@ -124,7 +117,7 @@ class Projectile extends Body {
         this.base = base;
         this.u = u;
         this.v = v;
-        this.lw = 1.5;
+        this.lw = 1.5 * baseLW;
         this.ud = 0;
         this.vd = 0;
         this.setAccel();
@@ -176,7 +169,7 @@ class Projectile extends Body {
                 let dsq = (b.x - this.x) ** 2 + (b.y - this.y) ** 2 - (b.r + this.r) ** 2;
                 if (dsq < 0) {
                     // back up to linear estimate of collision site
-                    let d = ((b.x - this.x) ** 2 + (b.y - this.y) ** 2)**0.5 - (b.r + this.r);
+                    let d = ((b.x - this.x) ** 2 + (b.y - this.y) ** 2) ** 0.5 - (b.r + this.r);
                     let th = Math.atan2(this.v, this.u)
                     this.x = this.x + d * Math.cos(th);
                     this.y = this.y + d * Math.sin(th);
@@ -221,6 +214,7 @@ class Ring {
     draw() {
         if (this.live) {
             ctx.beginPath();
+            ctx.lineWidth = 1 * baseLW;
             ctx.strokeStyle = `hsla(${this.hue},100%,${this.lightness}%,${this.alpha})`;
             ctx.arc(xtr(this.x), ytr(this.y), this.r * scl, 0, 2 * Math.PI);
             ctx.stroke();
@@ -231,10 +225,11 @@ class Explosion {
     constructor(x, y, n, r) {
         this.x = x;
         this.y = y;
-        this.lw = 1;
+        this.lw = 1 * baseLW;
         this.t = 0;
         this.n = n;
         this.r = r;
+        this.omg=5;
         this.live = true
         this.ringArray = []
         this.ringArray.push(new Ring(x, y, r))
@@ -242,10 +237,10 @@ class Explosion {
     update() {
         if (this.live) {
             this.t++;
-            this.live = this.t < (this.r / expSpeed + 5 * this.n)
+            this.live = this.t < (this.r / expSpeed + this.omg * this.n)
             this.ringArray.forEach(ring => ring.update())
 
-            if (this.t % 5 == 0 && this.ringArray.length < this.n) {
+            if (this.t % this.omg == 0 && this.ringArray.length < this.n) {
                 this.ringArray.push(new Ring(this.x, this.y, this.r))
             }
         }
@@ -256,7 +251,11 @@ class Explosion {
         }
     }
 }
-
+function generatePlanets(n) {
+    for (let i = 0; i < n; i++) {
+        planetArray[i] = new Planet();
+    }
+}
 function generateHSLColor(hueWidth = Math.random() * 30, hueStart = 160, valueWidth = 20, valueStart = 50) {
     let colorString = 'hsl(' + (Math.random() * hueWidth + hueStart) + ' , 100%, ' + (Math.random() ** 2 * valueWidth + valueStart) + '%)'
     return colorString;
@@ -297,7 +296,6 @@ addEventListener('mousemove', e => {
 addEventListener('mouseup', e => {
     mouseDown = false;
 });
-
 addEventListener("touchstart", e => {
     e.preventDefault();
     pointerDownHandler(e.touches[0].clientX, e.touches[0].clientY);
@@ -310,7 +308,6 @@ addEventListener("touchmove", e => {
 },
     { passive: false }
 );
-
 
 function pointerDownHandler(x, y) {
     let now = new Date().getTime();
@@ -338,7 +335,6 @@ function pointerDownHandler(x, y) {
         sp0 = baseArray[basex].sp;
     }
 }
-
 function pointerMoveHandler(x, y) {
     if (basex < 2) {
         dth = (x - cursor.x) * dth_sens
@@ -347,7 +343,6 @@ function pointerMoveHandler(x, y) {
         baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     }
 }
-
 function doubleClickHandler(basex) {
     // console.log(basex)
     if (basex < 2) {
@@ -357,7 +352,6 @@ function doubleClickHandler(basex) {
         trackAll = !trackAll;
     }
 }
-
 function redraw() {
     ctx.fillStyle = bgFillStyle;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -366,7 +360,6 @@ function redraw() {
     baseArray.forEach((x) => x.draw())
     explosionArray.forEach((x) => x.draw())
 }
-
 function anim() {
     requestAnimationFrame(anim);
     ctx.fillStyle = bgFillStyle;
@@ -392,17 +385,14 @@ function anim() {
 }
 function drawScores() {
 
-    ctx.font = "50px Arial";
+    ctx.font = 40 * window.devicePixelRatio + "px Arial";
+    ctx.textBaseline = "alphabetic"
     ctx.strokeStyle = baseCol[0]
-    ctx.strokeText(baseArray[1].nhits, 10, canvas.height - 10);
+    ctx.strokeText(baseArray[1].nhits, 8 * window.devicePixelRatio, canvas.height - 10 * window.devicePixelRatio);
     ctx.strokeStyle = baseCol[1]
-    ctx.strokeText(baseArray[0].nhits, 10, 50);
+    ctx.textBaseline = "hanging"
+    ctx.strokeText(baseArray[0].nhits, 8 * window.devicePixelRatio, 8 * window.devicePixelRatio);
 }
-let X, Y, AR, ARR, ARp;
-let maxx, maxy, minx, miny;
-let xoff, yoff = 0;
-let scl = 1;
-let buf = 50
 function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     // find smallest bounding window, defined by extrema of projectiles and starting window
     let xp, xpp, Xp, yp, ypp, Yp;
@@ -466,7 +456,6 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     xoff = -xpp[0];
     yoff = -ypp[0];
 }
-
 function initalize() {
     setSize()
     // nP = Math.round(Y / 30);
@@ -474,6 +463,11 @@ function initalize() {
     baseArray.push(new Base(0, 0, 300, 20, baseCol[0], 3 * Math.PI / 2, 20,))
     baseArray.push(new Base(1, 0, -300, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 }
+let X, Y, AR, ARR, ARp;
+let maxx, maxy, minx, miny;
+let xoff, yoff = 0;
+let scl = 1;
+let buf = 50;
 
 let projArray = [];
 let baseArray = [];
@@ -487,6 +481,7 @@ let basex;
 
 const projCol = ["#FFBBBB", "#BBBBFF"]
 const baseCol = ["#FF9999", "#9999FF"]
+const baseLW = 1 * window.devicePixelRatio;
 const zoomsmth = 0.15; // zoom speed, 1 is instant
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
