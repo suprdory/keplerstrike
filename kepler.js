@@ -74,8 +74,8 @@ class Body {
 class Planet extends Body {
     constructor(
         // x = (0.5 * X) + (1.5 * X * (Math.random() - 0.5)),
-        x = (0.5 * X) + (1.5 * 2000 * (Math.random() - 0.5)),
-        y = (0.5 * Y) + (0.5 * Y * (Math.random() - 0.5)),
+        x = (1.5 * 800 * (Math.random() - 0.5)),
+        y = (0.5 * 700 * (Math.random() - 0.5)),
         r = 5 + Math.random() * 50,
         d = Math.random() + .2,
     ) {
@@ -156,7 +156,7 @@ class Projectile extends Body {
             this.x = this.x + dt * this.u;
             this.y = this.y + dt * this.v;
             this.t = this.t + 1;
-            if (this.t > maxAge & (Math.abs(this.x - X / 2) > maxRange || Math.abs(this.y - Y / 2) > maxRange)) {
+            if (this.t > maxAge & (Math.abs(this.x) > maxRange || Math.abs(this.y) > maxRange)) {
                 // this.live = false;
                 // this.visible = false;
                 this.tracked = false
@@ -406,10 +406,10 @@ let buf = 50
 function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
     // find smallest bounding window, defined by extrema of projectiles and starting window
     let xp, xpp, Xp, yp, ypp, Yp;
-    let pmaxx = X;
-    let pmaxy = Y;
-    let pminx = 0;
-    let pminy = 0;
+    let pminx = -100;
+    let pmaxx = 100;
+    let pminy = -400;
+    let pmaxy = 400;
 
     projArray.forEach(p => {
         if (p.tracked || trackAll) {
@@ -469,10 +469,10 @@ function calcScl() { //calculate zoom (scl) and pan (xoff, yoff)
 
 function initalize() {
     setSize()
-    nP = Math.round(Y / 30);
-    generatePlanets(nP)
-    baseArray.push(new Base(0, canvas.width * 0.5, canvas.height * 0.9, 20, baseCol[0], 3 * Math.PI / 2, 20,))
-    baseArray.push(new Base(1, canvas.width * 0.5, canvas.height * 0.1, 20, baseCol[1], 1 * Math.PI / 2, 20,))
+    // nP = Math.round(Y / 30);
+    generatePlanets(10)
+    baseArray.push(new Base(0, 0, 300, 20, baseCol[0], 3 * Math.PI / 2, 20,))
+    baseArray.push(new Base(1, 0, -300, 20, baseCol[1], 1 * Math.PI / 2, 20,))
 }
 
 let projArray = [];
@@ -491,9 +491,9 @@ const zoomsmth = 0.15; // zoom speed, 1 is instant
 const vscl = 2; // velocity vector scale
 const ascl = 5; // acceleration vector scale
 const projSize = 3; // projectile radius
-const maxAge = 500; // timesteps to keep tracking projectile
+const maxAge = 1000; // timesteps to keep tracking projectile
 const expSpeed = 2; // explosion ring speed
-const maxRange = X + Y; // range to keep tracking projectile
+const maxRange = 800; // range to keep tracking projectile
 const dth_sens = 0.003; // angle adjustment sensitivity
 const dsp_sens = 0.15; // speed adjustment sensitivity
 const G = 200000; // gravitational constant in who-knows-what units
