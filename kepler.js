@@ -229,7 +229,7 @@ class Explosion {
         this.t = 0;
         this.n = n;
         this.r = r;
-        this.omg=5;
+        this.omg = 5;
         this.live = true
         this.ringArray = []
         this.ringArray.push(new Ring(x, y, r))
@@ -269,17 +269,19 @@ function setColors() {
         generateHSLColor(hueWidth, hueStart, valueWidth, valueStart)))
 }
 function setSize() {
-    X = innerWidth;
-    Y = innerHeight;
+    X = innerWidth * window.devicePixelRatio;
+    Y = innerHeight * window.devicePixelRatio;
     AR = Y / X;
     // set initial bounding window
-    minx = 0;
-    miny = 0;
-    maxx = X;
-    maxy = Y;
+    minx = -300;
+    miny = -600;
+    maxx = 300;
+    maxy = 600;
 
     canvas.height = Y;
     canvas.width = X;
+    canvas.style.width = window.innerWidth + "px"
+    canvas.style.height = window.innerHeight + "px"
 }
 
 addEventListener("mousedown", e => {
@@ -309,7 +311,9 @@ addEventListener("touchmove", e => {
     { passive: false }
 );
 
-function pointerDownHandler(x, y) {
+function pointerDownHandler(xc, yc) {
+    x=xc*devicePixelRatio;
+    y=yc*devicePixelRatio;
     let now = new Date().getTime();
     let timeSince = now - lastTouch;
     if (timeSince < 300) {
@@ -335,11 +339,19 @@ function pointerDownHandler(x, y) {
         sp0 = baseArray[basex].sp;
     }
 }
-function pointerMoveHandler(x, y) {
+function pointerMoveHandler(xc, yc) {
+    x=xc*devicePixelRatio;
+    y=yc*devicePixelRatio;
+    if (basex==0){
+        inv=1;
+    }
+    else{
+        inv=-1
+    }
     if (basex < 2) {
-        dth = (x - cursor.x) * dth_sens
+        dth = (x - cursor.x) * dth_sens*inv
         baseArray[basex].th = th0 + dth;
-        dsp = (y - cursor.y) * -dsp_sens
+        dsp = (y - cursor.y) * -dsp_sens*inv
         baseArray[basex].sp = Math.max(0, Math.min(sp0 + dsp, maxspeed))
     }
 }
